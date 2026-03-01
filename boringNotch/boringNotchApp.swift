@@ -29,14 +29,14 @@ struct DynamicNotchApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("boring.notch", systemImage: "sparkle", isInserted: $showMenuBarIcon) {
+        MenuBarExtra("island", systemImage: "sparkle", isInserted: $showMenuBarIcon) {
             Button("Settings") {
                 SettingsWindowController.shared.showWindow()
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
             CheckForUpdatesView(updater: updaterController.updater)
             Divider()
-            Button("Restart Boring Notch") {
+            Button("Restart island") {
                 ApplicationRelauncher.restart()
             }
             Button("Quit", role: .destructive) {
@@ -413,6 +413,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self = self else { return }
                 guard Defaults[.enableTranslation] else { return }
 
+                // Capture text BEFORE opening the notch — opening steals focus
+                // from the source app, which breaks both AX and simulated Cmd+C.
+                await TranslationManager.shared.captureAndTranslate()
+
                 let viewModel = self.vm
                 self.coordinator.currentView = .translation
                 viewModel.notchSize = settingsNotchSize
@@ -420,7 +424,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     viewModel.open()
                 }
 
-                TranslationManager.shared.translateSelectedText()
+                // Make the window key so the TextField can accept input
+                self.window?.makeKey()
             }
         }
 

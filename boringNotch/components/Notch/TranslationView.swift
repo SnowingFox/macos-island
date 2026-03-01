@@ -2,7 +2,7 @@
 //  TranslationView.swift
 //  boringNotch
 //
-//  Translation interface with text input, language display, and results.
+//  Translation interface with text input, language picker, and results.
 //
 
 import Defaults
@@ -33,6 +33,7 @@ struct TranslationView: View {
                     translationManager.dismiss()
                     BoringViewCoordinator.shared.currentView = .home
                     vm.notchSize = openNotchSize
+                    NSApp.keyWindow?.resignKey()
                 }
             } label: {
                 HStack(spacing: 4) {
@@ -47,25 +48,7 @@ struct TranslationView: View {
 
             Spacer()
 
-            if !translationManager.result.sourceLang.isEmpty {
-                HStack(spacing: 6) {
-                    Text(translationManager.result.sourceLang)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 10))
-                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
-                    Text(translationManager.result.targetLang)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.7))
-                        .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
-                }
-            } else {
-                Text("Translation")
-                    .font(.system(size: 13, weight: .semibold))
-                    .adaptiveText(isGlass: useLiquidGlass)
-            }
+            languageIndicator
 
             Spacer()
 
@@ -73,6 +56,29 @@ struct TranslationView: View {
         }
         .padding(.horizontal, 12)
         .padding(.top, 4)
+    }
+
+    @ViewBuilder
+    private var languageIndicator: some View {
+        if !translationManager.result.sourceLang.isEmpty {
+            HStack(spacing: 6) {
+                Text(translationManager.result.sourceLang)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 10))
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
+                Text(translationManager.result.targetLang)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
+            }
+        } else {
+            Text("Translation")
+                .font(.system(size: 13, weight: .semibold))
+                .adaptiveText(isGlass: useLiquidGlass)
+        }
     }
 
     @ViewBuilder
@@ -84,21 +90,7 @@ struct TranslationView: View {
 
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 8) {
-                    if let error = translationManager.result.error {
-                        VStack(spacing: 6) {
-                            Image(systemName: "text.cursor")
-                                .font(.system(size: 20))
-                                .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
-                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
-                            Text(error)
-                                .font(.system(size: 11))
-                                .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
-                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
-                                .multilineTextAlignment(.center)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                    } else if !translationManager.result.sourceText.isEmpty {
+                    if !translationManager.result.sourceText.isEmpty {
                         translationSection(
                             label: "ORIGINAL",
                             text: translationManager.result.sourceText,
@@ -116,7 +108,7 @@ struct TranslationView: View {
                                     .foregroundStyle(.gray)
                             }
                             .padding(.vertical, 8)
-                        } else {
+                        } else if !translationManager.result.translatedText.isEmpty {
                             HStack(alignment: .top) {
                                 translationSection(
                                     label: "TRANSLATION",
@@ -179,6 +171,8 @@ struct TranslationView: View {
                     translationManager.translateCustomText()
                 }
 
+            targetLanguagePicker
+
             Button {
                 translationManager.translateCustomText()
             } label: {
@@ -189,6 +183,41 @@ struct TranslationView: View {
             .buttonStyle(PlainButtonStyle())
             .disabled(translationManager.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
+    }
+
+    private var targetLanguagePicker: some View {
+        Menu {
+            ForEach(TranslationLanguage.allCases) { lang in
+                Button {
+                    translationManager.targetLanguage = lang
+                } label: {
+                    HStack {
+                        Text(lang.displayName)
+                        if translationManager.targetLanguage == lang {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Image(systemName: "globe")
+                    .font(.system(size: 10))
+                Text(translationManager.targetLanguage.displayName)
+                    .font(.system(size: 10, weight: .medium))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 7, weight: .semibold))
+            }
+            .foregroundStyle(useLiquidGlass ? .white.opacity(0.8) : .gray)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(useLiquidGlass ? 0.12 : 0.08))
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
     }
 
     private enum TextStyle { case primary, secondary }

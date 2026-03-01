@@ -2,8 +2,8 @@
 //  TranslationManager.swift
 //  boringNotch
 //
-//  Translates text via Google Translate API. Supports selected text capture
-//  and custom text input. Auto-detects CN<->EN direction.
+//  Translates text via Google Translate API. Supports clipboard capture
+//  and custom text input with selectable target language.
 //
 
 import AppKit
@@ -19,6 +19,38 @@ struct TranslationResult {
     var error: String? = nil
 }
 
+enum TranslationLanguage: String, CaseIterable, Identifiable {
+    case auto = "auto"
+    case zhCN = "zh-CN"
+    case en = "en"
+    case ja = "ja"
+    case ko = "ko"
+    case fr = "fr"
+    case de = "de"
+    case es = "es"
+    case ru = "ru"
+    case pt = "pt"
+    case ar = "ar"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .auto: return "Auto"
+        case .zhCN: return "中文"
+        case .en: return "English"
+        case .ja: return "日本語"
+        case .ko: return "한국어"
+        case .fr: return "Français"
+        case .de: return "Deutsch"
+        case .es: return "Español"
+        case .ru: return "Русский"
+        case .pt: return "Português"
+        case .ar: return "العربية"
+        }
+    }
+}
+
 @MainActor
 class TranslationManager: ObservableObject {
     static let shared = TranslationManager()
@@ -26,22 +58,21 @@ class TranslationManager: ObservableObject {
     @Published var result = TranslationResult()
     @Published var showTranslation = false
     @Published var inputText: String = ""
+    @Published var targetLanguage: TranslationLanguage = .auto
 
     private init() {}
 
-    func translateSelectedText() {
-        Task {
-            let text = await captureText()
+    /// Called on Cmd+T: try selected text first, then clipboard, then open empty for manual input.
+    func captureAndTranslate() async {
+        let text = await captureText()
 
-            guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                result = TranslationResult(error: "No selected text found.")
-                inputText = ""
-                showTranslation = true
-                return
-            }
-
+        if let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             inputText = text
             await translate(text)
+        } else {
+            inputText = ""
+            result = TranslationResult()
+            showTranslation = true
         }
     }
 
@@ -56,13 +87,12 @@ class TranslationManager: ObservableObject {
         guard !trimmed.isEmpty else { return }
 
         let detected = detectLanguage(trimmed)
-        let isChinese = detected == "zh" || detected == "zh-Hans" || detected == "zh-Hant"
-        let targetCode = isChinese ? "en" : "zh-CN"
+        let targetCode = resolveTargetLanguage(detected: detected)
 
         result = TranslationResult(
             sourceText: trimmed,
-            sourceLang: displayName(for: detected ?? "auto"),
-            targetLang: displayName(for: targetCode),
+            sourceLang: languageDisplayName(for: detected ?? "auto"),
+            targetLang: languageDisplayName(for: targetCode),
             isLoading: true
         )
         showTranslation = true
@@ -76,6 +106,16 @@ class TranslationManager: ObservableObject {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             showTranslation = false
         }
+    }
+
+    // MARK: - Target Language Resolution
+
+    private func resolveTargetLanguage(detected: String?) -> String {
+        if targetLanguage != .auto {
+            return targetLanguage.rawValue
+        }
+        let isChinese = detected == "zh" || detected == "zh-Hans" || detected == "zh-Hant"
+        return isChinese ? "en" : "zh-CN"
     }
 
     // MARK: - Google Translate API
@@ -110,7 +150,7 @@ class TranslationManager: ObservableObject {
     // MARK: - Text Capture
 
     private func captureText() async -> String? {
-        // 1. Try Accessibility API for direct selected text (no clipboard pollution)
+        // 1. Try Accessibility API for selected text
         if let axText = getSelectedTextViaAX(), !axText.isEmpty {
             return axText
         }
@@ -125,7 +165,11 @@ class TranslationManager: ObservableObject {
             return text
         }
 
-        // Don't fall back to existing clipboard — user expects selected text
+        // 3. Fall back to existing clipboard content
+        if let clipText = NSPasteboard.general.string(forType: .string), !clipText.isEmpty {
+            return clipText
+        }
+
         return nil
     }
 
@@ -160,16 +204,12 @@ class TranslationManager: ObservableObject {
         return recognizer.dominantLanguage?.rawValue
     }
 
-    private func displayName(for code: String) -> String {
+    private func languageDisplayName(for code: String) -> String {
+        for lang in TranslationLanguage.allCases where lang.rawValue == code {
+            return lang.displayName
+        }
         switch code {
-        case "zh", "zh-Hans", "zh-Hant", "zh-CN": return "中文"
-        case "en": return "English"
-        case "ja": return "日本語"
-        case "ko": return "한국어"
-        case "fr": return "Français"
-        case "de": return "Deutsch"
-        case "es": return "Español"
-        case "auto": return "Auto"
+        case "zh", "zh-Hans", "zh-Hant": return "中文"
         default: return code.uppercased()
         }
     }

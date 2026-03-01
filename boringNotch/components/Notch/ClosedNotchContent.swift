@@ -250,8 +250,7 @@ struct MusicLiveActivity: View {
                         {
                             MarqueeText(
                                 .constant(musicManager.songTitle),
-                                textColor: Defaults[.coloredSpectrogram]
-                                    ? Color(nsColor: musicManager.avgColor) : Color.gray,
+                                textColor: Color(nsColor: musicManager.avgColor),
                                 minDuration: 0.4,
                                 frameWidth: 100
                             )
@@ -265,9 +264,7 @@ struct MusicLiveActivity: View {
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .foregroundStyle(
-                                    Defaults[.coloredSpectrogram]
-                                        ? Color(nsColor: musicManager.avgColor)
-                                        : Color.gray
+                                    Color(nsColor: musicManager.avgColor)
                                 )
                                 .opacity(
                                     (coordinator.expandingView.show
@@ -291,9 +288,7 @@ struct MusicLiveActivity: View {
                 if useMusicVisualizer {
                     Rectangle()
                         .fill(
-                            Defaults[.coloredSpectrogram]
-                                ? Color(nsColor: musicManager.avgColor).gradient
-                                : Color.gray.gradient
+                            Color(nsColor: musicManager.avgColor).gradient
                         )
                         .frame(width: 50, alignment: .center)
                         .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
