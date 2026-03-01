@@ -111,7 +111,7 @@ struct WidgetHubView: View {
                     Text("Back")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundStyle(.gray)
+                .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
 
@@ -119,7 +119,7 @@ struct WidgetHubView: View {
 
             Text("Widgets")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white)
+                .adaptiveText(isGlass: useLiquidGlass)
 
             Spacer()
 
@@ -192,6 +192,7 @@ struct WidgetHubView: View {
 private struct WidgetDetailHeader: View {
     let title: String
     @Binding var page: WidgetPage
+    @Default(.useLiquidGlass) private var useLiquidGlass
 
     var body: some View {
         HStack {
@@ -206,7 +207,7 @@ private struct WidgetDetailHeader: View {
                     Text("Widgets")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundStyle(.gray)
+                .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
 
@@ -214,7 +215,7 @@ private struct WidgetDetailHeader: View {
 
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.white)
+                .adaptiveText(isGlass: useLiquidGlass)
 
             Spacer()
 
@@ -258,11 +259,11 @@ private struct WidgetDetailMarkets: View {
                                 HStack {
                                     Text("Open Market View")
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(.white)
+                                        .adaptiveText(isGlass: useLiquidGlass)
                                     Spacer()
                                     Image(systemName: "arrow.right")
                                         .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(.gray)
+                                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
                                 }
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
@@ -319,6 +320,7 @@ private struct WidgetDetailPomodoro: View {
     @Default(.pomodoroBreakMinutes) var pomodoroBreakMinutes
     @Default(.closedNotchShowPomodoro) var closedNotchShowPomodoro
     @Default(.useLiquidGlass) var useLiquidGlass
+    @ObservedObject var pomodoro = PomodoroManager.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -349,8 +351,9 @@ private struct WidgetDetailPomodoro: View {
                                 range: 1...60
                             )
                         }
+
                         detailSection {
-                            detailHint("Start/pause the timer from the Home tab. A colored dot shows timer status in the closed notch when enabled.")
+                            pomodoroControls
                         }
                     }
                 }
@@ -358,6 +361,72 @@ private struct WidgetDetailPomodoro: View {
                 .padding(.bottom, 8)
             }
         }
+    }
+
+    @ViewBuilder
+    private var pomodoroControls: some View {
+        VStack(spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pomodoro.stateLabel)
+                        .font(.system(size: 13, weight: .semibold))
+                        .adaptiveText(isGlass: useLiquidGlass)
+                    if pomodoro.state != .idle {
+                        Text(pomodoro.formattedTime)
+                            .font(.system(size: 20, weight: .medium, design: .monospaced))
+                            .foregroundStyle(pomodoro.stateColor)
+                            .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.25), radius: 0.5, y: 0.5) }
+                    }
+                }
+                Spacer()
+                Text("\(pomodoro.completedPomodoros) done")
+                    .font(.system(size: 11))
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.65) : .gray)
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 6)
+
+            if pomodoro.state != .idle {
+                ProgressView(value: pomodoro.progress)
+                    .tint(pomodoro.stateColor)
+                    .padding(.horizontal, 10)
+            }
+
+            HStack(spacing: 10) {
+                if pomodoro.state == .idle {
+                    pomodoroButton("Start Focus", color: .red) {
+                        pomodoro.startWork()
+                    }
+                } else {
+                    pomodoroButton(
+                        pomodoro.state == .paused ? "Resume" : "Pause",
+                        color: .orange
+                    ) {
+                        pomodoro.togglePause()
+                    }
+                    pomodoroButton("Reset", color: .gray) {
+                        pomodoro.reset()
+                    }
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.bottom, 8)
+        }
+    }
+
+    private func pomodoroButton(_ title: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(color.opacity(0.3))
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -477,24 +546,26 @@ private struct WidgetDetailMusic: View {
 
 @ViewBuilder
 private func detailSection(@ViewBuilder content: () -> some View) -> some View {
+    let isGlass = Defaults[.useLiquidGlass]
     VStack(spacing: 1) {
         content()
     }
-    .background(Color.white.opacity(0.06))
+    .background(Color.white.opacity(isGlass ? 0.12 : 0.06))
     .clipShape(RoundedRectangle(cornerRadius: 8))
 }
 
 @ViewBuilder
 private func detailToggle(title: String, subtitle: String? = nil, isOn: Binding<Bool>) -> some View {
+    let isGlass = Defaults[.useLiquidGlass]
     HStack(spacing: 10) {
         VStack(alignment: .leading, spacing: 1) {
             Text(title)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
+                .adaptiveText(isGlass: isGlass)
             if let subtitle {
                 Text(subtitle)
                     .font(.system(size: 10))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(isGlass ? .white.opacity(0.65) : .gray)
             }
         }
         Spacer()
@@ -509,9 +580,11 @@ private func detailToggle(title: String, subtitle: String? = nil, isOn: Binding<
 
 @ViewBuilder
 private func detailDescription(_ text: String) -> some View {
+    let isGlass = Defaults[.useLiquidGlass]
     Text(text)
         .font(.system(size: 11))
-        .foregroundStyle(.white.opacity(0.75))
+        .foregroundStyle(.white.opacity(isGlass ? 0.8 : 0.75))
+        .conditionalModifier(isGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
         .lineSpacing(2)
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -519,13 +592,15 @@ private func detailDescription(_ text: String) -> some View {
 
 @ViewBuilder
 private func detailHint(_ text: String) -> some View {
+    let isGlass = Defaults[.useLiquidGlass]
     HStack(spacing: 6) {
         Image(systemName: "info.circle")
             .font(.system(size: 10))
             .foregroundStyle(.cyan.opacity(0.7))
         Text(text)
             .font(.system(size: 10))
-            .foregroundStyle(.gray)
+            .foregroundStyle(isGlass ? .white.opacity(0.65) : .gray)
+            .conditionalModifier(isGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
             .lineSpacing(2)
     }
     .padding(.horizontal, 10)
@@ -534,10 +609,11 @@ private func detailHint(_ text: String) -> some View {
 
 @ViewBuilder
 private func detailStepper(title: String, value: Binding<Int>, unit: String, range: ClosedRange<Int>) -> some View {
+    let isGlass = Defaults[.useLiquidGlass]
     HStack(spacing: 10) {
         Text(title)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.white)
+            .adaptiveText(isGlass: isGlass)
         Spacer()
         HStack(spacing: 6) {
             Button {
@@ -547,13 +623,13 @@ private func detailStepper(title: String, value: Binding<Int>, unit: String, ran
             } label: {
                 Image(systemName: "minus.circle")
                     .font(.system(size: 14))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(isGlass ? .white.opacity(0.7) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
 
             Text("\(value.wrappedValue) \(unit)")
                 .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
+                .adaptiveText(isGlass: isGlass)
                 .frame(minWidth: 42)
 
             Button {
@@ -563,7 +639,7 @@ private func detailStepper(title: String, value: Binding<Int>, unit: String, ran
             } label: {
                 Image(systemName: "plus.circle")
                     .font(.system(size: 14))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(isGlass ? .white.opacity(0.7) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
         }

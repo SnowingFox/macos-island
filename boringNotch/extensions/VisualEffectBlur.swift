@@ -31,32 +31,32 @@ struct VisualEffectBlur: NSViewRepresentable {
 // MARK: - Liquid Glass Text & Icon Styling
 
 extension View {
-    /// Primary text on glass: white with subtle drop shadow for contrast.
+    /// Primary text on glass: white with strong drop shadow for readability.
     func glassText() -> some View {
         self
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.35), radius: 1, y: 0.5)
+            .shadow(color: .black.opacity(0.6), radius: 1.5, y: 0.5)
     }
 
     /// Secondary/dimmed text on glass: lighter opacity with shadow.
     func glassSecondaryText() -> some View {
         self
-            .foregroundStyle(.white.opacity(0.75))
-            .shadow(color: .black.opacity(0.25), radius: 0.5, y: 0.5)
+            .foregroundStyle(.white.opacity(0.85))
+            .shadow(color: .black.opacity(0.5), radius: 1, y: 0.5)
     }
 
-    /// Icon styling on glass: white with subtle shadow.
+    /// Icon styling on glass: white with strong shadow.
     func glassIcon() -> some View {
         self
-            .foregroundStyle(.white.opacity(0.9))
-            .shadow(color: .black.opacity(0.3), radius: 1, y: 0.5)
+            .foregroundStyle(.white.opacity(0.95))
+            .shadow(color: .black.opacity(0.5), radius: 1.5, y: 0.5)
     }
 
     /// Surface/card background for glass mode.
     func glassSurface(cornerRadius: CGFloat = 10) -> some View {
         self.background(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(.white.opacity(0.1))
+                .fill(.white.opacity(0.12))
                 .shadow(color: .white.opacity(0.05), radius: 0.5, y: -0.5)
         )
     }

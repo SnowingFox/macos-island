@@ -22,7 +22,7 @@ struct MusicPlayerView: View {
             AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
             if useLiquidGlass {
                 MusicControlsView()
-                    .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                    .shadow(color: .black.opacity(0.5), radius: 1.5, y: 0.5)
             } else {
                 MusicControlsView().drawingGroup().compositingGroup()
             }
@@ -431,10 +431,12 @@ struct NotchHomeView: View {
     var body: some View {
         Group {
             if !coordinator.firstLaunch {
-                mainContent
+                VStack(spacing: 8) {
+                    mainContent
+                    widgetRow
+                }
             }
         }
-        // simplified: use a straightforward opacity transition
         .transition(.opacity)
     }
 
@@ -442,19 +444,15 @@ struct NotchHomeView: View {
         Defaults[.showMirror] && webcamManager.cameraAvailable && vm.isCameraExpanded
     }
 
-    private var mainContent: some View {
-        HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
-            MusicPlayerView(albumArtNamespace: albumArtNamespace)
+    @Default(.homeWidgets) private var homeWidgets
 
-            if Defaults[.showCalendar] {
-                WeatherCalendarView()
-                    .onHover { isHovering in
-                        vm.isHoveringCalendar = isHovering
-                    }
-                    .environmentObject(vm)
-                    .frame(width: shouldShowCamera ? 200 : 260)
-                    .transition(.opacity)
-            }
+    private var activeWidgets: [HomeWidget] {
+        homeWidgets.filter(\.isEnabled)
+    }
+
+    private var mainContent: some View {
+        HStack(alignment: .top, spacing: shouldShowCamera ? 10 : 15) {
+            MusicPlayerView(albumArtNamespace: albumArtNamespace)
 
             if shouldShowCamera {
                 CameraPreviewView(webcamManager: webcamManager)
@@ -466,6 +464,74 @@ struct NotchHomeView: View {
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
         .blur(radius: vm.notchState == .closed ? 30 : 0)
+    }
+
+    private static let maxHomeWidgets = 4
+
+    @ViewBuilder
+    private var widgetRow: some View {
+        let widgets = Array(activeWidgets.prefix(Self.maxHomeWidgets))
+        let overflow = activeWidgets.count > Self.maxHomeWidgets
+
+        if !widgets.isEmpty {
+            VStack(spacing: 6) {
+                if widgets.count <= 2 {
+                    HStack(spacing: 8) {
+                        ForEach(widgets) { widget in
+                            homeWidgetView(for: widget)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity)
+                        }
+                    }
+                } else {
+                    let row1 = Array(widgets.prefix(2))
+                    let row2 = Array(widgets.dropFirst(2))
+
+                    HStack(spacing: 8) {
+                        ForEach(row1) { widget in
+                            homeWidgetView(for: widget)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity)
+                        }
+                    }
+
+                    HStack(spacing: 8) {
+                        ForEach(row2) { widget in
+                            homeWidgetView(for: widget)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity)
+                        }
+                    }
+                    .frame(maxWidth: row2.count < 2
+                           ? UIConstants.widgetSingleRowMaxWidth
+                           : .infinity)
+                }
+
+                if overflow {
+                    Text("Widgets space is full. Manage in Settings.")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.gray)
+                }
+            }
+            .onHover { isHovering in
+                vm.isHoveringCalendar = isHovering
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func homeWidgetView(for widget: HomeWidget) -> some View {
+        switch widget {
+        case .calendar:
+            WeatherCalendarView()
+                .environmentObject(vm)
+        case .market:
+            MarketCompactWidget()
+        case .pomodoro:
+            if PomodoroManager.shared.state != .idle {
+                PomodoroCompactView()
+            }
+        }
     }
 }
 

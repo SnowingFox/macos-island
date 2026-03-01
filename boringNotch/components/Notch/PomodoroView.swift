@@ -16,7 +16,7 @@ struct PomodoroCompactView: View {
         HStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 2.5)
+                    .stroke(Color.white.opacity(useLiquidGlass ? 0.15 : 0.1), lineWidth: 2.5)
                 Circle()
                     .trim(from: 0, to: pomodoro.progress)
                     .stroke(pomodoro.stateColor, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
@@ -26,10 +26,11 @@ struct PomodoroCompactView: View {
                 VStack(spacing: 0) {
                     Text(pomodoro.formattedTime)
                         .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.white)
+                        .adaptiveText(isGlass: useLiquidGlass)
                     Text(pomodoro.stateLabel)
                         .font(.system(size: 7, weight: .medium))
                         .foregroundStyle(pomodoro.stateColor)
+                        .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
                 }
             }
             .frame(width: 42, height: 42)
@@ -45,7 +46,7 @@ struct PomodoroCompactView: View {
                         if pomodoro.completedPomodoros > 6 {
                             Text("+\(pomodoro.completedPomodoros - 6)")
                                 .font(.system(size: 7))
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
                         }
                     }
                 }
@@ -70,7 +71,7 @@ struct PomodoroCompactView: View {
                                 .font(.system(size: 8))
                                 .foregroundStyle(.white)
                                 .frame(width: 20, height: 20)
-                                .background(Circle().fill(Color.white.opacity(0.15)))
+                                .background(Circle().fill(Color.white.opacity(useLiquidGlass ? 0.18 : 0.15)))
                         }
                         .buttonStyle(PlainButtonStyle())
 
@@ -81,7 +82,7 @@ struct PomodoroCompactView: View {
                                 .font(.system(size: 8))
                                 .foregroundStyle(.white)
                                 .frame(width: 20, height: 20)
-                                .background(Circle().fill(Color.white.opacity(0.15)))
+                                .background(Circle().fill(Color.white.opacity(useLiquidGlass ? 0.18 : 0.15)))
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -107,9 +108,11 @@ struct PomodoroExpandedClosedView: View {
                     .foregroundStyle(.white)
                     .lineLimit(1)
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 8)
 
             Rectangle()
-                .fill(.black)
+                .fill(.clear)
                 .frame(width: vm.closedNotchSize.width + 10)
 
             HStack(spacing: 4) {
@@ -120,7 +123,8 @@ struct PomodoroExpandedClosedView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.orange)
             }
-            .frame(width: 50, alignment: .trailing)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 8)
         }
     }
 }
@@ -130,14 +134,33 @@ struct PomodoroClosedView: View {
 
     var body: some View {
         if pomodoro.state != .idle {
-            HStack(spacing: 3) {
-                Circle()
-                    .fill(pomodoro.stateColor)
-                    .frame(width: 5, height: 5)
+            HStack(spacing: 4) {
+                Image(systemName: "timer")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(pomodoro.stateColor)
+
                 Text(pomodoro.formattedTime)
                     .font(.system(size: 10, weight: .medium, design: .rounded).monospacedDigit())
                     .foregroundStyle(.white)
+                    .lineLimit(1)
             }
+            .fixedSize()
         }
+    }
+
+    /// Left half for flanking layout: timer icon
+    var leftContent: some View {
+        Image(systemName: "timer")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(pomodoro.stateColor)
+    }
+
+    /// Right half for flanking layout: time text
+    var rightContent: some View {
+        Text(pomodoro.formattedTime)
+            .font(.system(size: 10, weight: .medium, design: .rounded).monospacedDigit())
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .fixedSize()
     }
 }

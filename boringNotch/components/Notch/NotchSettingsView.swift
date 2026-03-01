@@ -35,7 +35,7 @@ struct NotchSettingsView: View {
                         Text("Back")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
                 }
                 .buttonStyle(PlainButtonStyle())
 
@@ -43,7 +43,7 @@ struct NotchSettingsView: View {
 
                 Text("Settings")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .adaptiveText(isGlass: useLiquidGlass)
 
                 Spacer()
 
@@ -52,7 +52,8 @@ struct NotchSettingsView: View {
                 } label: {
                     Image(systemName: "arrow.up.right.square")
                         .font(.system(size: 12))
-                        .foregroundStyle(.gray)
+                        .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
+                        .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
                 }
                 .buttonStyle(PlainButtonStyle())
                 .help("Open full settings")

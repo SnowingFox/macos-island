@@ -307,8 +307,63 @@ to prevent scroll-triggered shrinking within those views.
 
 Widgets (market, calendar, pomodoro, music) are managed via `WidgetHubView`, accessible from the
 "Widgets" tab in `TabSelectionView`. Each widget has an enable toggle and a "show in closed notch"
-option. The `ClosedNotchWidgetBar` in ContentView renders compact widget indicators when music
-is idle and no other priority view is showing.
+option.
+
+#### Home View Layout
+
+The open notch home view (`NotchHomeView`) uses a two-row layout:
+- **Top row**: Music player (full width, with optional camera).
+- **Bottom row**: Horizontal widget row (`widgetRow`), driven by `Defaults[.homeWidgets]` — an
+  ordered array of `HomeWidget` enum values (`.calendar`, `.market`, `.pomodoro`).
+  Only enabled widgets are rendered. Each uses `.frame(maxWidth: .infinity)`. No scroll.
+
+Key rules:
+- Music is always on top — never moves, never reorderable.
+- `openNotchSize` is 660×280 to accommodate both rows.
+- New home widgets must be added to the `HomeWidget` enum.
+- Each widget should be a compact, self-contained view with card backgrounds.
+
+#### Closed Notch Widgets — Forbidden Zone Architecture
+
+The hardware notch cutout is a **forbidden zone** — no widget content may be placed there.
+All closed notch widget indicators follow the same compact pattern: `icon + data`, using
+`.fixedSize()` and `.lineLimit(1)` to prevent overflow.
+
+##### Layout: No Music Playing
+
+`ClosedNotchWidgetBar` flanks the notch cutout (like `MusicLiveActivity`):
+- If 1 widget: displayed on the **left** side, right-aligned toward the cutout.
+- If 2 widgets: one on **left**, one on **right**, flanking the cutout.
+- A black `Rectangle` fills the cutout gap (`closedNotchSize.width - cornerRadius`).
+- Each side has 10pt inner padding from the cutout edge.
+
+##### Layout: Music Playing
+
+`ClosedNotchMusicWidgets` appends widget pills to the **right** of the music spectrum,
+with 8pt leading padding. `computedChinWidth` adds 120px extra for these.
+
+##### Sizing Safety
+
+`computedChinWidth` is clamped to `windowSize.width - 20` to prevent overflow on small
+screens. Each widget indicator uses `.fixedSize()` to render at natural width and prices
+use `compactPrice` (e.g. `$67K` instead of `$67025`) when values are large.
+
+Do NOT use separate "satellite pill" overlays — all widgets live within the notch shape.
+
+#### Expanding View (Sneak Peek)
+
+When transient notifications expand the closed notch (e.g. pomodoro completion, battery):
+- Content is split as: left text | center notch gap | right text.
+- The center gap matches `vm.closedNotchSize.width + 10`.
+- Use `.frame(maxWidth: .infinity)` on both sides with `.trailing` / `.leading` alignment
+  and inner padding (8pt) to prevent text from being hidden behind the notch cutout.
+- The `computedChinWidth` must be set wide enough (e.g. 400 for pomodoro) in `ContentView`.
+
+#### Music Sneak Peek
+
+Music sneak peek / expanding view on song change is disabled. The `updateSneakPeek()` in
+`MusicManager` is intentionally empty. Other sneak peek types (volume, brightness, battery,
+pomodoro) remain active.
 
 ## Checklist for New Features
 
@@ -323,4 +378,5 @@ is idle and no other priority view is showing.
 8. Test both open and closed notch states, and with liquid glass on/off.
 9. If the new view is full-height (like settings), add it to `scrollLocked` set in
    `handleUpGesture` and to the `needsTall` check in `onChange(of: currentView)`.
-10. For widgets: add to `WidgetHubView` with enable toggle and closed-notch option.
+10. For widgets: add to `WidgetHubView` with enable toggle. Add a `HomeWidget` case
+    for home view placement. Add to `homeWidgets` default order in `HomeWidget.defaultOrder`.

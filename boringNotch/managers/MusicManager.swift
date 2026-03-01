@@ -583,13 +583,8 @@ class MusicManager: ObservableObject {
     }
 
     private func updateSneakPeek() {
-        if isPlaying && Defaults[.enableSneakPeek] {
-            if Defaults[.sneakPeekStyles] == .standard {
-                coordinator.toggleSneakPeek(status: true, type: .music)
-            } else {
-                coordinator.toggleExpandingView(status: true, type: .music)
-            }
-        }
+        // Music sneak peek / expanding view on song change is disabled.
+        // Other sneak peek types (volume, brightness, etc.) remain active.
     }
 
     // MARK: - Public Methods for controlling playback

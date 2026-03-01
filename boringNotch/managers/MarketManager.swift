@@ -3,7 +3,7 @@
 //  boringNotch
 //
 //  Real-time market data for crypto, gold, and stocks via free APIs.
-//  Crypto: CoinGecko (no key). Stocks/commodities: Yahoo Finance (informal).
+//  Crypto: Binance (no key). Stocks/commodities: Yahoo Finance (no key).
 //
 
 import Combine
@@ -20,6 +20,12 @@ struct MarketAsset: Identifiable, Equatable {
     var isLoaded: Bool = false
     let type: AssetType
 
+    /// Binance trading pair symbol (e.g. "BTCUSDT"), only for crypto
+    var binanceSymbol: String? {
+        guard type == .crypto else { return nil }
+        return symbol.uppercased() + "USDT"
+    }
+
     enum AssetType: String {
         case crypto, stock, commodity
     }
@@ -35,6 +41,18 @@ struct MarketAsset: Identifiable, Equatable {
             return String(format: "$%.2f", price)
         } else {
             return String(format: "$%.4f", price)
+        }
+    }
+
+    var compactPrice: String {
+        if price >= 100_000 {
+            return String(format: "$%.0fK", price / 1_000)
+        } else if price >= 10_000 {
+            return String(format: "$%.0f", price)
+        } else if price >= 1 {
+            return String(format: "$%.1f", price)
+        } else {
+            return String(format: "$%.3f", price)
         }
     }
 
@@ -93,9 +111,9 @@ class MarketManager: ObservableObject {
     func fetchAll() {
         Task {
             await withTaskGroup(of: Void.self) { group in
-                let cryptoIDs = assets.filter { $0.type == .crypto }.map(\.id)
-                if !cryptoIDs.isEmpty {
-                    group.addTask { await self.fetchCrypto(ids: cryptoIDs) }
+                let cryptoAssets = assets.filter { $0.type == .crypto }
+                if !cryptoAssets.isEmpty {
+                    group.addTask { await self.fetchCryptoBinance(assets: cryptoAssets) }
                 }
                 let yahooIDs = assets.filter { $0.type == .stock || $0.type == .commodity }.map(\.id)
                 for ticker in yahooIDs {
@@ -106,80 +124,41 @@ class MarketManager: ObservableObject {
         }
     }
 
-    // MARK: - CoinGecko (crypto, free, no key)
+    // MARK: - Binance (crypto, free, no key, reliable)
 
-    private func fetchCrypto(ids: [String]) async {
-        let joined = ids.joined(separator: ",")
-        let urlString = "https://api.coingecko.com/api/v3/simple/price?ids=\(joined)&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true"
-        guard let url = URL(string: urlString) else { return }
-
-        var request = URLRequest(url: url)
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15", forHTTPHeaderField: "User-Agent")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.timeoutInterval = 15
+    private func fetchCryptoBinance(assets cryptoAssets: [MarketAsset]) async {
+        let symbols = cryptoAssets.compactMap(\.binanceSymbol)
+        let symbolsJSON = "[" + symbols.map { "\"\($0)\"" }.joined(separator: ",") + "]"
+        guard let encoded = symbolsJSON.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://api.binance.com/api/v3/ticker/24hr?symbols=\(encoded)")
+        else { return }
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 15
+            let (data, _) = try await URLSession.shared.data(for: request)
 
-            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
-                // Rate limited or blocked — retry with alt endpoint
-                await fetchCryptoFallback(ids: ids)
-                return
-            }
+            guard let tickers = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return }
 
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                await fetchCryptoFallback(ids: ids)
-                return
-            }
+            for ticker in tickers {
+                guard let pairSymbol = ticker["symbol"] as? String,
+                      let priceStr = ticker["lastPrice"] as? String,
+                      let price = Double(priceStr),
+                      let changeStr = ticker["priceChangePercent"] as? String,
+                      let change = Double(changeStr),
+                      let volStr = ticker["quoteVolume"] as? String,
+                      let vol = Double(volStr)
+                else { continue }
 
-            for (coinID, info) in json {
-                guard let info = info as? [String: Any],
-                      let price = info["usd"] as? Double else { continue }
-                let change = info["usd_24h_change"] as? Double ?? 0
-                let vol = info["usd_24h_vol"] as? Double ?? 0
-
-                if let idx = assets.firstIndex(where: { $0.id == coinID }) {
-                    assets[idx].price = price
-                    assets[idx].change24h = change
-                    assets[idx].volume24h = vol
-                    assets[idx].isLoaded = true
+                if let idx = self.assets.firstIndex(where: { $0.binanceSymbol == pairSymbol }) {
+                    self.assets[idx].price = price
+                    self.assets[idx].change24h = change
+                    self.assets[idx].volume24h = vol
+                    self.assets[idx].isLoaded = true
                 }
             }
         } catch {
-            await fetchCryptoFallback(ids: ids)
-        }
-    }
-
-    /// Fallback: fetch each coin individually via CoinGecko /coins/ endpoint
-    private func fetchCryptoFallback(ids: [String]) async {
-        for coinID in ids {
-            let urlString = "https://api.coingecko.com/api/v3/coins/\(coinID)?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false"
-            guard let url = URL(string: urlString) else { continue }
-
-            var request = URLRequest(url: url)
-            request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
-            request.timeoutInterval = 15
-
-            do {
-                let (data, _) = try await URLSession.shared.data(for: request)
-                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let market = json["market_data"] as? [String: Any],
-                      let currentPrice = market["current_price"] as? [String: Any],
-                      let price = currentPrice["usd"] as? Double else { continue }
-
-                let changeDict = market["price_change_percentage_24h"] as? Double ?? 0
-                let volDict = market["total_volume"] as? [String: Any]
-                let vol = volDict?["usd"] as? Double ?? 0
-
-                if let idx = assets.firstIndex(where: { $0.id == coinID }) {
-                    assets[idx].price = price
-                    assets[idx].change24h = changeDict
-                    assets[idx].volume24h = vol
-                    assets[idx].isLoaded = true
-                }
-            } catch {}
-
-            try? await Task.sleep(for: .milliseconds(300))
+            NSLog("Binance API error: \(error.localizedDescription)")
         }
     }
 
@@ -191,6 +170,7 @@ class MarketManager: ObservableObject {
 
         var request = URLRequest(url: url)
         request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 15
 
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
@@ -212,6 +192,8 @@ class MarketManager: ObservableObject {
                 assets[idx].volume24h = vol
                 assets[idx].isLoaded = true
             }
-        } catch {}
+        } catch {
+            NSLog("Yahoo Finance error for \(ticker): \(error.localizedDescription)")
+        }
     }
 }

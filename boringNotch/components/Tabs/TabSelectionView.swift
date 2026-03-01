@@ -5,6 +5,7 @@
 //  Created by Hugo Persson on 2024-08-25.
 //
 
+import Defaults
 import SwiftUI
 
 struct TabModel: Identifiable {
@@ -22,6 +23,7 @@ let tabs = [
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @Default(.useLiquidGlass) private var useLiquidGlass
     @Namespace var animation
 
     private func isTabActive(_ tab: TabModel) -> Bool {
@@ -40,11 +42,12 @@ struct TabSelectionView: View {
                         }
                     }
                     .frame(height: 26)
-                    .foregroundStyle(isTabActive(tab) ? .white : .gray)
+                    .foregroundStyle(isTabActive(tab) ? .white : (useLiquidGlass ? .white.opacity(0.6) : .gray))
+                    .conditionalModifier(useLiquidGlass && isTabActive(tab)) { $0.shadow(color: .black.opacity(0.25), radius: 0.5, y: 0.5) }
                     .background {
                         if isTabActive(tab) {
                             Capsule()
-                                .fill(Color(nsColor: .secondarySystemFill))
+                                .fill(useLiquidGlass ? Color.white.opacity(0.15) : Color(nsColor: .secondarySystemFill))
                                 .matchedGeometryEffect(id: "capsule", in: animation)
                         } else {
                             Capsule()

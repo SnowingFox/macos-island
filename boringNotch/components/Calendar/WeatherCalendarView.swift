@@ -13,6 +13,7 @@ struct WeatherCalendarView: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject private var weatherManager = WeatherManager.shared
     @ObservedObject private var calendarManager = CalendarManager.shared
+    @Default(.useLiquidGlass) private var useLiquidGlass
     @State private var currentTime = Date()
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -40,6 +41,10 @@ struct WeatherCalendarView: View {
             }
             .padding(.vertical, 8)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(useLiquidGlass ? Color.white.opacity(0.08) : Color.white.opacity(0.04))
+        )
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .onReceive(timer) { time in
             currentTime = time
@@ -57,21 +62,24 @@ struct WeatherCalendarView: View {
                 .font(.system(size: 24))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.white)
+                .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
 
             Text("\(Int(weatherManager.weather.temperature.rounded()))°")
                 .font(.system(size: 18, weight: .medium, design: .rounded))
-                .foregroundStyle(.white)
+                .adaptiveText(isGlass: useLiquidGlass)
 
             if !weatherManager.weather.cityName.isEmpty {
                 Text(weatherManager.weather.cityName)
                     .font(.system(size: 10))
-                    .foregroundStyle(Color(white: 0.6))
+                    .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                    .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(Color(white: 0.6)) }
                     .lineLimit(1)
             }
 
             Text(weatherManager.weather.condition.description)
                 .font(.system(size: 9))
-                .foregroundStyle(Color(white: 0.5))
+                .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(Color(white: 0.5)) }
                 .lineLimit(1)
         }
     }
@@ -82,12 +90,13 @@ struct WeatherCalendarView: View {
         VStack(spacing: 4) {
             Text(timeString)
                 .font(.system(size: 32, weight: .light, design: .rounded))
-                .foregroundStyle(.white)
                 .monospacedDigit()
+                .adaptiveText(isGlass: useLiquidGlass)
 
             Text(dateString)
                 .font(.system(size: 11))
-                .foregroundStyle(Color(white: 0.6))
+                .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(Color(white: 0.6)) }
         }
     }
 
@@ -98,12 +107,12 @@ struct WeatherCalendarView: View {
             HStack(spacing: 4) {
                 Text("Today")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .adaptiveText(isGlass: useLiquidGlass)
                 Image(systemName: "calendar")
                     .font(.system(size: 10))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
                     .padding(3)
-                    .background(Color.white.opacity(0.1))
+                    .background(Color.white.opacity(useLiquidGlass ? 0.12 : 0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 3))
             }
 
@@ -115,17 +124,19 @@ struct WeatherCalendarView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(event.title)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white)
+                            .adaptiveText(isGlass: useLiquidGlass)
                             .lineLimit(1)
                         Text(eventTimeRange(event))
                             .font(.system(size: 9))
-                            .foregroundStyle(Color(white: 0.5))
+                            .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                            .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(Color(white: 0.5)) }
                     }
                 }
             } else {
                 Text("No events")
                     .font(.system(size: 11))
-                    .foregroundStyle(Color(white: 0.5))
+                    .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                    .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(Color(white: 0.5)) }
             }
         }
         .padding(.horizontal, 4)
@@ -135,7 +146,7 @@ struct WeatherCalendarView: View {
 
     private var dividerLine: some View {
         Rectangle()
-            .fill(Color.white.opacity(0.1))
+            .fill(Color.white.opacity(useLiquidGlass ? 0.15 : 0.1))
             .frame(width: 1, height: 60)
     }
 

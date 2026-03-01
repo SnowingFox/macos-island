@@ -192,6 +192,7 @@ class BoringViewModel: NSObject, ObservableObject {
     func open() {
         self.notchSize = openNotchSize
         self.notchState = .open
+        self.coordinator.notchIsOpen = true
         
         // Force music information update when notch is opened
         MusicManager.shared.forceUpdate()
@@ -205,6 +206,7 @@ class BoringViewModel: NSObject, ObservableObject {
         self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)
         self.closedNotchSize = self.notchSize
         self.notchState = .closed
+        self.coordinator.notchIsOpen = false
         self.isBatteryPopoverActive = false
         self.coordinator.sneakPeek.show = false
         self.edgeAutoOpenActive = false

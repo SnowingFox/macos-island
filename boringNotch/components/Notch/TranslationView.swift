@@ -41,7 +41,7 @@ struct TranslationView: View {
                     Text("Back")
                         .font(.system(size: 12, weight: .medium))
                 }
-                .foregroundStyle(.gray)
+                .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
             }
             .buttonStyle(PlainButtonStyle())
 
@@ -52,17 +52,19 @@ struct TranslationView: View {
                     Text(translationManager.result.sourceLang)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.7))
+                        .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
                     Image(systemName: "arrow.right")
                         .font(.system(size: 10))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
                     Text(translationManager.result.targetLang)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.7))
+                        .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
                 }
             } else {
                 Text("Translation")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .adaptiveText(isGlass: useLiquidGlass)
             }
 
             Spacer()
@@ -75,88 +77,90 @@ struct TranslationView: View {
 
     @ViewBuilder
     private var content: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 8) {
-                inputBar
+        VStack(alignment: .leading, spacing: 0) {
+            inputBar
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
 
-                if let error = translationManager.result.error {
-                    VStack(spacing: 6) {
-                        Image(systemName: "text.cursor")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.gray)
-                        Text(error)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.gray)
-                            .multilineTextAlignment(.center)
-                        Text("Type text above, or select text and press Fn + T")
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color(white: 0.45))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                } else if !translationManager.result.sourceText.isEmpty {
-                    translationSection(
-                        label: "ORIGINAL",
-                        text: translationManager.result.sourceText,
-                        style: .secondary
-                    )
-
-                    Divider().background(Color.white.opacity(0.1))
-
-                    if translationManager.result.isLoading {
-                        HStack(spacing: 6) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text("Translating...")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.gray)
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let error = translationManager.result.error {
+                        VStack(spacing: 6) {
+                            Image(systemName: "text.cursor")
+                                .font(.system(size: 20))
+                                .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
+                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
+                            Text(error)
+                                .font(.system(size: 11))
+                                .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
+                                .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 8)
-                    } else {
-                        HStack(alignment: .top) {
-                            translationSection(
-                                label: "TRANSLATION",
-                                text: translationManager.result.translatedText,
-                                style: .primary
-                            )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    } else if !translationManager.result.sourceText.isEmpty {
+                        translationSection(
+                            label: "ORIGINAL",
+                            text: translationManager.result.sourceText,
+                            style: .secondary
+                        )
 
-                            Spacer()
+                        Divider().background(Color.white.opacity(0.1))
 
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(translationManager.result.translatedText, forType: .string)
-                            } label: {
-                                Image(systemName: "doc.on.doc")
-                                    .font(.system(size: 11))
+                        if translationManager.result.isLoading {
+                            HStack(spacing: 6) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("Translating...")
+                                    .font(.system(size: 12))
                                     .foregroundStyle(.gray)
-                                    .padding(5)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                            .fill(Color.white.opacity(0.08))
-                                    )
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .help("Copy translation")
+                            .padding(.vertical, 8)
+                        } else {
+                            HStack(alignment: .top) {
+                                translationSection(
+                                    label: "TRANSLATION",
+                                    text: translationManager.result.translatedText,
+                                    style: .primary
+                                )
+
+                                Spacer()
+
+                                Button {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(translationManager.result.translatedText, forType: .string)
+                                } label: {
+                                    Image(systemName: "doc.on.doc")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
+                                        .padding(5)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                                .fill(Color.white.opacity(useLiquidGlass ? 0.12 : 0.08))
+                                        )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                .help("Copy translation")
+                            }
                         }
+                    } else {
+                        VStack(spacing: 6) {
+                            Image(systemName: "globe")
+                                .font(.system(size: 20))
+                                .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
+                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray.opacity(0.5)) }
+                            Text("Type text above and press Return to translate")
+                                .font(.system(size: 11))
+                                .conditionalModifier(useLiquidGlass) { $0.glassSecondaryText() }
+                                .conditionalModifier(!useLiquidGlass) { $0.foregroundStyle(.gray) }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
                     }
-                } else {
-                    VStack(spacing: 6) {
-                        Image(systemName: "globe")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.gray.opacity(0.5))
-                        Text("Type text above and press Return to translate")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.gray)
-                        Text("Or select text anywhere and press Fn + T")
-                            .font(.system(size: 10))
-                            .foregroundStyle(Color(white: 0.45))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 20)
                 }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 8)
         }
     }
 
@@ -193,12 +197,13 @@ struct TranslationView: View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
                 .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.gray.opacity(0.6))
+                .foregroundStyle(useLiquidGlass ? .white.opacity(0.5) : .gray.opacity(0.6))
+                .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.15), radius: 0.5, y: 0.5) }
             Text(text)
                 .font(.system(size: style == .primary ? 13 : 12, weight: style == .primary ? .medium : .regular))
                 .foregroundStyle(style == .primary ? .white : .white.opacity(0.75))
+                .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.3), radius: 1, y: 0.5) }
                 .textSelection(.enabled)
-                .lineLimit(6)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

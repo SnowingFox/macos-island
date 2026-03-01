@@ -58,8 +58,16 @@ struct ContentView: View {
         )
     }
 
+    private var closedWidgetCount: Int {
+        var count = 0
+        if closedWidgetShowPomodoro() { count += 1 }
+        if closedWidgetShowMarket() { count += 1 }
+        return count
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
+        let widgetCount = closedWidgetCount
 
         if notificationManager.showNotification && vm.notchState == .closed && Defaults[.enableNotifications] {
             chinWidth = 480
@@ -81,9 +89,15 @@ struct ContentView: View {
             && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
+        } else if vm.notchState == .closed && !coordinator.expandingView.show && !vm.hideOnClosed
+            && widgetCount > 0
+        {
+            let sideWidth: CGFloat = widgetCount == 1 ? 60 : 90
+            chinWidth += (2 * sideWidth + 20)
         }
 
-        return chinWidth
+        let maxWidth = windowSize.width - 20
+        return min(chinWidth, maxWidth)
     }
 
     var body: some View {
@@ -228,12 +242,6 @@ struct ContentView: View {
                         .frame(width: computedChinWidth, height: vm.chinHeight)
                 }
             }
-        }
-        .overlay(alignment: .top) {
-            SatellitePillView()
-                .offset(x: computedChinWidth / 2 + 24)
-                .allowsHitTesting(false)
-                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: vm.notchState)
         }
         .padding(.bottom, 8)
         .frame(maxWidth: windowSize.width, maxHeight: windowSize.height, alignment: .top)

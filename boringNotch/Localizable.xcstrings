@@ -911,6 +911,9 @@
         }
       }
     },
+    "%lld done" : {
+
+    },
     "%lld%%" : {
       "localizations" : {
         "ar" : {
@@ -12034,6 +12037,9 @@
         }
       }
     },
+    "Loading..." : {
+
+    },
     "Lottie JSON URL" : {
       "localizations" : {
         "ar" : {
@@ -16146,9 +16152,6 @@
           }
         }
       }
-    },
-    "Or select text anywhere and press Fn + T" : {
-
     },
     "Pick a Color" : {
       "localizations" : {
@@ -21775,9 +21778,6 @@
     "Type text above and press Return to translate" : {
 
     },
-    "Type text above, or select text and press Fn + T" : {
-
-    },
     "Uninstall" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -23086,6 +23086,9 @@
       }
     },
     "Widgets" : {
+
+    },
+    "Widgets space is full. Manage in Settings." : {
 
     },
     "Window Appearance" : {

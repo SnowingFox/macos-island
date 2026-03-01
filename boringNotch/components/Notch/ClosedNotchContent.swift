@@ -8,69 +8,82 @@
 import Defaults
 import SwiftUI
 
-// MARK: - Satellite Pill (secondary widget indicator beside the notch)
+// MARK: - Closed Widget Visibility Helpers
 
-struct SatellitePillView: View {
-    @EnvironmentObject var vm: BoringViewModel
-    @ObservedObject var pomodoro = PomodoroManager.shared
-    @ObservedObject var marketManager = MarketManager.shared
-    @ObservedObject var musicManager = MusicManager.shared
-
-    private var hasMusicPlaying: Bool {
-        musicManager.isPlaying || !musicManager.isPlayerIdle
-    }
-
-    private var showPomodoro: Bool {
-        Defaults[.closedNotchShowPomodoro] && Defaults[.enablePomodoro] && pomodoro.state != .idle
-    }
-
-    private var showMarket: Bool {
-        Defaults[.closedNotchShowMarket] && Defaults[.enableMarketTicker]
-    }
-
-    private var hasSecondaryContent: Bool {
-        hasMusicPlaying && (showPomodoro || showMarket)
-    }
-
-    var body: some View {
-        if hasSecondaryContent && vm.notchState == .closed && !vm.hideOnClosed {
-            HStack(spacing: 4) {
-                if showPomodoro {
-                    PomodoroClosedView()
-                }
-                if showMarket {
-                    MarketClosedIndicatorView()
-                }
-            }
-            .padding(.horizontal, 6)
-            .frame(height: max(0, vm.effectiveClosedNotchHeight - 4))
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.black)
-            )
-            .clipShape(Capsule(style: .continuous))
-            .transition(.scale(scale: 0.3, anchor: .leading).combined(with: .opacity))
-            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showPomodoro)
-            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showMarket)
-        }
-    }
+@MainActor
+func closedWidgetShowPomodoro() -> Bool {
+    Defaults[.closedNotchShowPomodoro] && Defaults[.enablePomodoro] && PomodoroManager.shared.state != .idle
 }
 
-// MARK: - ClosedNotchWidgetBar (fallback when no music)
+@MainActor
+func closedWidgetShowMarket() -> Bool {
+    Defaults[.closedNotchShowMarket] && Defaults[.enableMarketTicker]
+}
+
+@MainActor
+func hasAnyClosedWidgetContent() -> Bool {
+    closedWidgetShowPomodoro() || closedWidgetShowMarket()
+}
+
+// MARK: - ClosedNotchWidgetBar (no music — widgets flank the notch cutout)
 
 struct ClosedNotchWidgetBar: View {
     @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject private var pomodoroManager = PomodoroManager.shared
+    @ObservedObject private var marketManager = MarketManager.shared
 
     var body: some View {
-        HStack(spacing: 6) {
-            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+        let showPom = closedWidgetShowPomodoro()
+        let showMkt = closedWidgetShowMarket()
+        let widgetCount = (showPom ? 1 : 0) + (showMkt ? 1 : 0)
 
-            if Defaults[.closedNotchShowPomodoro] && Defaults[.enablePomodoro] {
-                PomodoroClosedView()
+        if widgetCount == 0 {
+            Rectangle().fill(.clear)
+                .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+        } else if widgetCount == 1 {
+            singleWidgetFlankingLayout(showPom: showPom, showMkt: showMkt)
+        } else {
+            twoWidgetFlankingLayout
+        }
+    }
+
+    /// Single widget: split icon (left) | notch gap | data (right) — like MusicLiveActivity
+    @ViewBuilder
+    private func singleWidgetFlankingLayout(showPom: Bool, showMkt: Bool) -> some View {
+        HStack(spacing: 0) {
+            if showPom {
+                PomodoroClosedView().leftContent
+                    .padding(.trailing, 8)
+            } else if showMkt {
+                MarketClosedIndicatorView().leftContent
+                    .padding(.trailing, 8)
             }
-            if Defaults[.closedNotchShowMarket] && Defaults[.enableMarketTicker] {
-                MarketClosedIndicatorView()
+
+            Rectangle().fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            if showPom {
+                PomodoroClosedView().rightContent
+                    .padding(.leading, 8)
+            } else if showMkt {
+                MarketClosedIndicatorView().rightContent
+                    .padding(.leading, 8)
             }
+        }
+        .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+    }
+
+    /// Two widgets: whole widget (left) | notch gap | whole widget (right)
+    private var twoWidgetFlankingLayout: some View {
+        HStack(spacing: 0) {
+            PomodoroClosedView()
+                .padding(.trailing, 10)
+
+            Rectangle().fill(.black)
+                .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
+
+            MarketClosedIndicatorView()
+                .padding(.leading, 10)
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
     }
