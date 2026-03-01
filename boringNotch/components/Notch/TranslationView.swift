@@ -2,7 +2,7 @@
 //  TranslationView.swift
 //  boringNotch
 //
-//  Displays translation results inside the open notch.
+//  Translation interface with text input, language display, and results.
 //
 
 import Defaults
@@ -47,7 +47,7 @@ struct TranslationView: View {
 
             Spacer()
 
-            if translationManager.result.error == nil {
+            if !translationManager.result.sourceLang.isEmpty {
                 HStack(spacing: 6) {
                     Text(translationManager.result.sourceLang)
                         .font(.system(size: 11, weight: .medium))
@@ -67,18 +67,7 @@ struct TranslationView: View {
 
             Spacer()
 
-            if !translationManager.result.translatedText.isEmpty {
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(translationManager.result.translatedText, forType: .string)
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.gray)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .help("Copy translation")
-            }
+            Color.clear.frame(width: 44, height: 1)
         }
         .padding(.horizontal, 12)
         .padding(.top, 4)
@@ -86,26 +75,26 @@ struct TranslationView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let error = translationManager.result.error {
-            VStack(spacing: 8) {
-                Spacer()
-                Image(systemName: "text.cursor")
-                    .font(.system(size: 24))
-                    .foregroundStyle(.gray)
-                Text(error)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.gray)
-                    .multilineTextAlignment(.center)
-                Text("Select text and copy (⌘C), then press the shortcut")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color(white: 0.5))
-                Spacer()
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 12)
-        } else {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 8) {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 8) {
+                inputBar
+
+                if let error = translationManager.result.error {
+                    VStack(spacing: 6) {
+                        Image(systemName: "text.cursor")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.gray)
+                        Text(error)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.gray)
+                            .multilineTextAlignment(.center)
+                        Text("Type text above, or select text and press Fn + T")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color(white: 0.45))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                } else if !translationManager.result.sourceText.isEmpty {
                     translationSection(
                         label: "ORIGINAL",
                         text: translationManager.result.sourceText,
@@ -124,16 +113,77 @@ struct TranslationView: View {
                         }
                         .padding(.vertical, 8)
                     } else {
-                        translationSection(
-                            label: "TRANSLATION",
-                            text: translationManager.result.translatedText,
-                            style: .primary
-                        )
+                        HStack(alignment: .top) {
+                            translationSection(
+                                label: "TRANSLATION",
+                                text: translationManager.result.translatedText,
+                                style: .primary
+                            )
+
+                            Spacer()
+
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(translationManager.result.translatedText, forType: .string)
+                            } label: {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.gray)
+                                    .padding(5)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                            .fill(Color.white.opacity(0.08))
+                                    )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .help("Copy translation")
+                        }
                     }
+                } else {
+                    VStack(spacing: 6) {
+                        Image(systemName: "globe")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.gray.opacity(0.5))
+                        Text("Type text above and press Return to translate")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.gray)
+                        Text("Or select text anywhere and press Fn + T")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color(white: 0.45))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 8)
             }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 8)
+        }
+    }
+
+    private var inputBar: some View {
+        HStack(spacing: 6) {
+            TextField("Type or paste text to translate...", text: $translationManager.inputText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .foregroundStyle(.white)
+                .padding(8)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(useLiquidGlass ? Color.white.opacity(0.1) : Color.white.opacity(0.06))
+                )
+                .onSubmit {
+                    translationManager.translateCustomText()
+                }
+
+            Button {
+                translationManager.translateCustomText()
+            } label: {
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.cyan)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(translationManager.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 

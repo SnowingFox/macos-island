@@ -19,6 +19,7 @@ enum SneakContentType {
     case battery
     case download
     case notification
+    case pomodoro
 }
 
 struct sneakPeek {

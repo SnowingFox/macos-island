@@ -2,7 +2,8 @@
 //  TranslationManager.swift
 //  boringNotch
 //
-//  Translates selected/clipboard text. Auto-detects CN<->EN direction.
+//  Translates text via Google Translate API. Supports selected text capture
+//  and custom text input. Auto-detects CN<->EN direction.
 //
 
 import AppKit
@@ -24,8 +25,7 @@ class TranslationManager: ObservableObject {
 
     @Published var result = TranslationResult()
     @Published var showTranslation = false
-
-    private let maxChunkSize = 450
+    @Published var inputText: String = ""
 
     private init() {}
 
@@ -34,29 +34,42 @@ class TranslationManager: ObservableObject {
             let text = await captureText()
 
             guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                result = TranslationResult(error: "No text found. Select text first, then press the shortcut.")
+                result = TranslationResult(error: "No selected text found.")
+                inputText = ""
                 showTranslation = true
                 return
             }
 
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            let detected = detectLanguage(trimmed)
-            let isChinese = detected == "zh" || detected == "zh-Hans" || detected == "zh-Hant"
-            let sourceLang = isChinese ? "zh" : (detected ?? "en")
-            let targetLang = isChinese ? "en" : "zh"
-
-            result = TranslationResult(
-                sourceText: trimmed,
-                sourceLang: displayName(for: sourceLang),
-                targetLang: displayName(for: targetLang),
-                isLoading: true
-            )
-            showTranslation = true
-
-            let translated = await performChunkedTranslation(text: trimmed, from: sourceLang, to: targetLang)
-            result.translatedText = translated
-            result.isLoading = false
+            inputText = text
+            await translate(text)
         }
+    }
+
+    func translateCustomText() {
+        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        Task { await translate(text) }
+    }
+
+    func translate(_ text: String) async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let detected = detectLanguage(trimmed)
+        let isChinese = detected == "zh" || detected == "zh-Hans" || detected == "zh-Hant"
+        let targetCode = isChinese ? "en" : "zh-CN"
+
+        result = TranslationResult(
+            sourceText: trimmed,
+            sourceLang: displayName(for: detected ?? "auto"),
+            targetLang: displayName(for: targetCode),
+            isLoading: true
+        )
+        showTranslation = true
+
+        let translated = await googleTranslate(text: trimmed, to: targetCode)
+        result.translatedText = translated
+        result.isLoading = false
     }
 
     func dismiss() {
@@ -65,13 +78,44 @@ class TranslationManager: ObservableObject {
         }
     }
 
+    // MARK: - Google Translate API
+
+    private func googleTranslate(text: String, to target: String) async -> String {
+        let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let urlString = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=\(target)&dt=t&q=\(encoded)"
+        guard let url = URL(string: urlString) else { return text }
+
+        do {
+            var request = URLRequest(url: url)
+            request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+            let (data, _) = try await URLSession.shared.data(for: request)
+
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [Any],
+                  let sentences = json.first as? [[Any]] else {
+                return text
+            }
+
+            var translated = ""
+            for sentence in sentences {
+                if let part = sentence.first as? String {
+                    translated += part
+                }
+            }
+            return translated.isEmpty ? text : translated
+        } catch {
+            return text
+        }
+    }
+
     // MARK: - Text Capture
 
     private func captureText() async -> String? {
+        // 1. Try Accessibility API for direct selected text (no clipboard pollution)
         if let axText = getSelectedTextViaAX(), !axText.isEmpty {
             return axText
         }
 
+        // 2. Try simulated Cmd+C — only accept if clipboard actually changed
         let before = NSPasteboard.general.changeCount
         simulateCopy()
         try? await Task.sleep(for: .milliseconds(200))
@@ -81,10 +125,7 @@ class TranslationManager: ObservableObject {
             return text
         }
 
-        if let clip = NSPasteboard.general.string(forType: .string), !clip.isEmpty {
-            return clip
-        }
-
+        // Don't fall back to existing clipboard — user expects selected text
         return nil
     }
 
@@ -121,94 +162,15 @@ class TranslationManager: ObservableObject {
 
     private func displayName(for code: String) -> String {
         switch code {
-        case "zh", "zh-Hans", "zh-Hant": return "中文"
+        case "zh", "zh-Hans", "zh-Hant", "zh-CN": return "中文"
         case "en": return "English"
         case "ja": return "日本語"
         case "ko": return "한국어"
         case "fr": return "Français"
         case "de": return "Deutsch"
         case "es": return "Español"
+        case "auto": return "Auto"
         default: return code.uppercased()
-        }
-    }
-
-    // MARK: - Chunked Translation
-
-    private func performChunkedTranslation(text: String, from source: String, to target: String) async -> String {
-        let chunks = splitIntoChunks(text, maxLength: maxChunkSize)
-        var translatedChunks: [String] = []
-
-        for chunk in chunks {
-            let translated = await performTranslation(text: chunk, from: source, to: target)
-            translatedChunks.append(translated)
-        }
-
-        return translatedChunks.joined()
-    }
-
-    private func splitIntoChunks(_ text: String, maxLength: Int) -> [String] {
-        guard text.count > maxLength else { return [text] }
-
-        var chunks: [String] = []
-        var remaining = text
-
-        while !remaining.isEmpty {
-            if remaining.count <= maxLength {
-                chunks.append(remaining)
-                break
-            }
-
-            let endIndex = remaining.index(remaining.startIndex, offsetBy: maxLength)
-            let searchRange = remaining.startIndex..<endIndex
-
-            // Try to split at sentence boundaries first
-            var splitIndex = endIndex
-            let sentenceEnders: [Character] = [".", "。", "!", "！", "?", "？", "\n"]
-            for char in sentenceEnders {
-                if let idx = remaining[searchRange].lastIndex(of: char) {
-                    let candidate = remaining.index(after: idx)
-                    if candidate > remaining.startIndex {
-                        splitIndex = candidate
-                        break
-                    }
-                }
-            }
-
-            // Fall back to space if no sentence boundary found
-            if splitIndex == endIndex, let spaceIdx = remaining[searchRange].lastIndex(of: " ") {
-                splitIndex = remaining.index(after: spaceIdx)
-            }
-
-            chunks.append(String(remaining[remaining.startIndex..<splitIndex]))
-            remaining = String(remaining[splitIndex...])
-        }
-
-        return chunks
-    }
-
-    private func performTranslation(text: String, from source: String, to target: String) async -> String {
-        let s = langCode(source)
-        let t = langCode(target)
-        let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "https://api.mymemory.translated.net/get?q=\(encoded)&langpair=\(s)|\(t)") else {
-            return text
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let rd = json["responseData"] as? [String: Any],
-               let translated = rd["translatedText"] as? String {
-                return translated
-            }
-        } catch {}
-        return text
-    }
-
-    private func langCode(_ code: String) -> String {
-        switch code {
-        case "zh", "zh-Hans", "zh-Hant": return "zh-CN"
-        default: return code
         }
     }
 }

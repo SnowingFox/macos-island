@@ -901,6 +901,16 @@
         }
       }
     },
+    "%lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld %2$@"
+          }
+        }
+      }
+    },
     "%lld%%" : {
       "localizations" : {
         "ar" : {
@@ -1303,6 +1313,9 @@
           }
         }
       }
+    },
+    "+%lld" : {
+
     },
     "About" : {
       "localizations" : {
@@ -5511,9 +5524,6 @@
         }
       }
     },
-    "Closed notch" : {
-
-    },
     "Closed Notch" : {
       "localizations" : {
         "ar" : {
@@ -5913,9 +5923,6 @@
           }
         }
       }
-    },
-    "Configure" : {
-
     },
     "Continue" : {
       "localizations" : {
@@ -15637,6 +15644,9 @@
     "Open full settings" : {
 
     },
+    "Open Market View" : {
+
+    },
     "Open Notch" : {
       "localizations" : {
         "ar" : {
@@ -16136,6 +16146,9 @@
           }
         }
       }
+    },
+    "Or select text anywhere and press Fn + T" : {
+
     },
     "Pick a Color" : {
       "localizations" : {
@@ -16736,6 +16749,9 @@
           }
         }
       }
+    },
+    "Quick Translate" : {
+
     },
     "Quit" : {
       "localizations" : {
@@ -18138,9 +18154,6 @@
           }
         }
       }
-    },
-    "Select text and copy (⌘C), then press the shortcut" : {
-
     },
     "Select the music source you want to use. You can change this later in the app settings." : {
       "localizations" : {
@@ -21752,6 +21765,18 @@
           }
         }
       }
+    },
+    "Type or paste text to translate..." : {
+
+    },
+    "Type or paste text..." : {
+
+    },
+    "Type text above and press Return to translate" : {
+
+    },
+    "Type text above, or select text and press Fn + T" : {
+
     },
     "Uninstall" : {
       "extractionState" : "stale",

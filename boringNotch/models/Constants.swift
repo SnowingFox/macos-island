@@ -164,6 +164,9 @@ extension Defaults.Keys {
     static let pomodoroWorkMinutes = Key<Int>("pomodoroWorkMinutes", default: 25)
     static let pomodoroBreakMinutes = Key<Int>("pomodoroBreakMinutes", default: 5)
 
+    // MARK: Translation
+    static let enableTranslation = Key<Bool>("enableTranslation", default: true)
+
     // MARK: Closed Notch Widgets
     static let closedNotchShowMarket = Key<Bool>("closedNotchShowMarket", default: false)
     static let closedNotchShowPomodoro = Key<Bool>("closedNotchShowPomodoro", default: false)

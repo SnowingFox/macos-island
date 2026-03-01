@@ -13,75 +13,115 @@ struct PomodoroCompactView: View {
     @Default(.useLiquidGlass) var useLiquidGlass
 
     var body: some View {
-        VStack(spacing: 6) {
+        HStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 3)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 2.5)
                 Circle()
                     .trim(from: 0, to: pomodoro.progress)
-                    .stroke(pomodoro.stateColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .stroke(pomodoro.stateColor, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 1), value: pomodoro.progress)
 
-                VStack(spacing: 1) {
+                VStack(spacing: 0) {
                     Text(pomodoro.formattedTime)
-                        .font(.system(size: 16, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(.white)
                     Text(pomodoro.stateLabel)
-                        .font(.system(size: 8, weight: .medium))
+                        .font(.system(size: 7, weight: .medium))
                         .foregroundStyle(pomodoro.stateColor)
                 }
             }
-            .frame(width: 60, height: 60)
+            .frame(width: 42, height: 42)
 
-            HStack(spacing: 8) {
-                if pomodoro.state == .idle {
-                    Button {
-                        pomodoro.startWork()
-                    } label: {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.white)
-                            .frame(width: 26, height: 26)
-                            .background(Circle().fill(Color.red.opacity(0.8)))
+            VStack(alignment: .leading, spacing: 4) {
+                if pomodoro.completedPomodoros > 0 {
+                    HStack(spacing: 2) {
+                        ForEach(0..<min(pomodoro.completedPomodoros, 6), id: \.self) { _ in
+                            Circle()
+                                .fill(Color.red.opacity(0.6))
+                                .frame(width: 4, height: 4)
+                        }
+                        if pomodoro.completedPomodoros > 6 {
+                            Text("+\(pomodoro.completedPomodoros - 6)")
+                                .font(.system(size: 7))
+                                .foregroundStyle(.gray)
+                        }
                     }
-                    .buttonStyle(PlainButtonStyle())
-                } else {
-                    Button {
-                        pomodoro.togglePause()
-                    } label: {
-                        Image(systemName: pomodoro.state == .paused ? "play.fill" : "pause.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.white)
-                            .frame(width: 24, height: 24)
-                            .background(Circle().fill(Color.white.opacity(0.15)))
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Button {
-                        pomodoro.reset()
-                    } label: {
-                        Image(systemName: "stop.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.white)
-                            .frame(width: 24, height: 24)
-                            .background(Circle().fill(Color.white.opacity(0.15)))
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
-            }
 
-            if pomodoro.completedPomodoros > 0 {
-                HStack(spacing: 2) {
-                    ForEach(0..<min(pomodoro.completedPomodoros, 8), id: \.self) { _ in
-                        Circle()
-                            .fill(Color.red.opacity(0.6))
-                            .frame(width: 4, height: 4)
+                HStack(spacing: 4) {
+                    if pomodoro.state == .idle {
+                        Button {
+                            pomodoro.startWork()
+                        } label: {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white)
+                                .frame(width: 22, height: 22)
+                                .background(Circle().fill(Color.red.opacity(0.8)))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    } else {
+                        Button {
+                            pomodoro.togglePause()
+                        } label: {
+                            Image(systemName: pomodoro.state == .paused ? "play.fill" : "pause.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.white)
+                                .frame(width: 20, height: 20)
+                                .background(Circle().fill(Color.white.opacity(0.15)))
+                        }
+                        .buttonStyle(PlainButtonStyle())
+
+                        Button {
+                            pomodoro.reset()
+                        } label: {
+                            Image(systemName: "stop.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(.white)
+                                .frame(width: 20, height: 20)
+                                .background(Circle().fill(Color.white.opacity(0.15)))
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
+    }
+}
+
+struct PomodoroExpandedClosedView: View {
+    @EnvironmentObject var vm: BoringViewModel
+    @ObservedObject var pomodoro = PomodoroManager.shared
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "timer")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(pomodoro.stateColor)
+                Text(pomodoro.sneakPeekMessage)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+            }
+
+            Rectangle()
+                .fill(.black)
+                .frame(width: vm.closedNotchSize.width + 10)
+
+            HStack(spacing: 4) {
+                Text("\(pomodoro.completedPomodoros)")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.orange)
+            }
+            .frame(width: 50, alignment: .trailing)
+        }
     }
 }
 

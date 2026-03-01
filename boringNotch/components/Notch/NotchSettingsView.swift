@@ -156,16 +156,16 @@ struct NotchSettingsView: View {
             Image(systemName: icon)
                 .font(.system(size: 13))
                 .foregroundStyle(isOn.wrappedValue ? .white : .gray)
+                .conditionalModifier(useLiquidGlass && isOn.wrappedValue) { $0.glassIcon() }
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .shadow(color: useLiquidGlass ? .black.opacity(0.3) : .clear, radius: 1)
+                    .adaptiveText(isGlass: useLiquidGlass)
                 Text(subtitle)
                     .font(.system(size: 10))
-                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.65) : .gray)
             }
 
             Spacer()

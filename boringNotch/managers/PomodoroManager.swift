@@ -110,12 +110,21 @@ class PomodoroManager: ObservableObject {
             if state == .working {
                 completedPomodoros += 1
                 sendNotification(title: "Focus Complete!", body: "Time for a break. You've done \(completedPomodoros) pomodoro\(completedPomodoros == 1 ? "" : "s").")
+                showSneakPeek(message: "Focus done! Break time")
                 startBreak()
             } else if state == .onBreak {
                 sendNotification(title: "Break Over!", body: "Ready for another focus session?")
+                showSneakPeek(message: "Break over! Ready?")
                 state = .idle
             }
         }
+    }
+
+    @Published var sneakPeekMessage: String = ""
+
+    private func showSneakPeek(message: String) {
+        sneakPeekMessage = message
+        BoringViewCoordinator.shared.toggleExpandingView(status: true, type: .pomodoro)
     }
 
     private func sendNotification(title: String, body: String) {

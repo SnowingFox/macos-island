@@ -171,10 +171,30 @@ When `Defaults[.useLiquidGlass]` is true and the notch is **open**:
   The black layer MUST become transparent (`opacity: 0`) for pure glass.
 - The notch cutout fill in `BoringHeader` becomes `.clear`.
 - Button capsules use `Color.white.opacity(0.12)` instead of `.black`.
-- Text gets subtle `.shadow(color: .black.opacity(0.3), radius: 1)` for readability.
 - Section backgrounds use `Color.white.opacity(0.12)` instead of `0.06`.
 
 When **closed**, the notch is always solid black regardless of the glass setting.
+
+#### Glass-Mode Text & Icon Styling (Apple Design Guidelines)
+
+On translucent glass backgrounds, text and icons need contrast assistance.
+Use the shared modifiers in `VisualEffectBlur.swift`:
+
+| Element | Modifier | Effect |
+|---------|----------|--------|
+| Primary text | `.glassText()` | White + drop shadow `(0.35, r:1, y:0.5)` |
+| Secondary text | `.glassSecondaryText()` | White 75% + lighter shadow |
+| Icons | `.glassIcon()` | White 90% + shadow |
+| Card surface | `.glassSurface()` | `white.opacity(0.1)` fill + subtle top highlight |
+| Adaptive | `.adaptiveText(isGlass:)` | Conditional glass/solid styling |
+
+Key principles from Apple HIG for translucent surfaces:
+- Always add a subtle drop shadow to text over glass — never rely on color alone.
+- Use `foregroundStyle(.white)` not `.primary` on glass — system primary may be too dim.
+- Icons should be slightly less opaque (0.9) than text for visual hierarchy.
+- Card/section backgrounds on glass should be `white.opacity(0.08–0.12)`.
+- Never use `Color.black` backgrounds on elements inside glass — use `Color.clear` or
+  very low-opacity white instead.
 
 ## Animation Patterns
 

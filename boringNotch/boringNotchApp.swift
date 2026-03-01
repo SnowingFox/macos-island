@@ -411,6 +411,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         KeyboardShortcuts.onKeyDown(for: .translateSelection) { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
+                guard Defaults[.enableTranslation] else { return }
 
                 let viewModel = self.vm
                 self.coordinator.currentView = .translation
@@ -421,6 +422,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
                 TranslationManager.shared.translateSelectedText()
             }
+        }
+
+        if Defaults[.enableMarketTicker] {
+            MarketManager.shared.startMonitoring()
         }
 
         if !Defaults[.showOnAllDisplays] {

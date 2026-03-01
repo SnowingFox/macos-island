@@ -22,6 +22,7 @@ struct MusicPlayerView: View {
             AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
             if useLiquidGlass {
                 MusicControlsView()
+                    .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
             } else {
                 MusicControlsView().drawingGroup().compositingGroup()
             }
@@ -92,6 +93,8 @@ struct AlbumArtView: View {
     private var albumArtImage: some View {
         Image(nsImage: musicManager.albumArt)
             .resizable()
+            .interpolation(.high)
+            .antialiased(true)
             .aspectRatio(1, contentMode: .fit)
             .matchedGeometryEffect(id: "albumArt", in: albumArtNamespace)
             .clipped()
@@ -105,18 +108,7 @@ struct AlbumArtView: View {
 
     @ViewBuilder
     private var appIconOverlay: some View {
-        if vm.notchState == .open && !musicManager.usingAppIconForArtwork {
-            AppIcon(for: musicManager.bundleIdentifier ?? "com.apple.Music")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 24, height: 24)
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-                .shadow(color: .black.opacity(0.4), radius: 2)
-                .offset(x: 8, y: 8)
-                .transition(.scale(scale: 0.5).combined(with: .opacity))
-                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: musicManager.bundleIdentifier)
-                .zIndex(2)
-        }
+        EmptyView()
     }
 }
 
@@ -454,21 +446,14 @@ struct NotchHomeView: View {
         HStack(alignment: .top, spacing: (shouldShowCamera && Defaults[.showCalendar]) ? 10 : 15) {
             MusicPlayerView(albumArtNamespace: albumArtNamespace)
 
-            if Defaults[.showCalendar] || Defaults[.enablePomodoro] {
-                VStack(spacing: 6) {
-                    if Defaults[.showCalendar] {
-                        WeatherCalendarView()
-                            .onHover { isHovering in
-                                vm.isHoveringCalendar = isHovering
-                            }
-                            .environmentObject(vm)
+            if Defaults[.showCalendar] {
+                WeatherCalendarView()
+                    .onHover { isHovering in
+                        vm.isHoveringCalendar = isHovering
                     }
-                    if Defaults[.enablePomodoro] {
-                        PomodoroCompactView()
-                    }
-                }
-                .frame(width: shouldShowCamera ? 200 : 260)
-                .transition(.opacity)
+                    .environmentObject(vm)
+                    .frame(width: shouldShowCamera ? 200 : 260)
+                    .transition(.opacity)
             }
 
             if shouldShowCamera {

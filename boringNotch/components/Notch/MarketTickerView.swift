@@ -32,14 +32,13 @@ struct MarketTickerView: View {
         HStack {
             Button {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    BoringViewCoordinator.shared.currentView = .home
-                    vm.notchSize = openNotchSize
+                    BoringViewCoordinator.shared.currentView = .widgets
                 }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 11, weight: .semibold))
-                    Text("Back")
+                    Text("Widgets")
                         .font(.system(size: 12, weight: .medium))
                 }
                 .foregroundStyle(.gray)

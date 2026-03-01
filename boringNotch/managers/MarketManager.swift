@@ -113,9 +113,24 @@ class MarketManager: ObservableObject {
         let urlString = "https://api.coingecko.com/api/v3/simple/price?ids=\(joined)&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true"
         guard let url = URL(string: urlString) else { return }
 
+        var request = URLRequest(url: url)
+        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15", forHTTPHeaderField: "User-Agent")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 15
+
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                // Rate limited or blocked — retry with alt endpoint
+                await fetchCryptoFallback(ids: ids)
+                return
+            }
+
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                await fetchCryptoFallback(ids: ids)
+                return
+            }
 
             for (coinID, info) in json {
                 guard let info = info as? [String: Any],
@@ -130,7 +145,42 @@ class MarketManager: ObservableObject {
                     assets[idx].isLoaded = true
                 }
             }
-        } catch {}
+        } catch {
+            await fetchCryptoFallback(ids: ids)
+        }
+    }
+
+    /// Fallback: fetch each coin individually via CoinGecko /coins/ endpoint
+    private func fetchCryptoFallback(ids: [String]) async {
+        for coinID in ids {
+            let urlString = "https://api.coingecko.com/api/v3/coins/\(coinID)?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false"
+            guard let url = URL(string: urlString) else { continue }
+
+            var request = URLRequest(url: url)
+            request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+            request.timeoutInterval = 15
+
+            do {
+                let (data, _) = try await URLSession.shared.data(for: request)
+                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let market = json["market_data"] as? [String: Any],
+                      let currentPrice = market["current_price"] as? [String: Any],
+                      let price = currentPrice["usd"] as? Double else { continue }
+
+                let changeDict = market["price_change_percentage_24h"] as? Double ?? 0
+                let volDict = market["total_volume"] as? [String: Any]
+                let vol = volDict?["usd"] as? Double ?? 0
+
+                if let idx = assets.firstIndex(where: { $0.id == coinID }) {
+                    assets[idx].price = price
+                    assets[idx].change24h = changeDict
+                    assets[idx].volume24h = vol
+                    assets[idx].isLoaded = true
+                }
+            } catch {}
+
+            try? await Task.sleep(for: .milliseconds(300))
+        }
     }
 
     // MARK: - Yahoo Finance (stocks & commodities, no key)
