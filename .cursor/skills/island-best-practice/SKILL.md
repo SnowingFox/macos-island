@@ -365,6 +365,39 @@ Music sneak peek / expanding view on song change is disabled. The `updateSneakPe
 `MusicManager` is intentionally empty. Other sneak peek types (volume, brightness, battery,
 pomodoro) remain active.
 
+#### Music Waveform (Spectrum) Coloring — MANDATORY
+
+The audio spectrum visualizer in the closed notch **MUST always** follow the album art's
+dominant color. This is non-negotiable and must never be gated behind a user setting.
+
+Rules:
+- `MusicManager.calculateAverageColor()` must always be called inside `updateAlbumArt()` —
+  never wrap it in a conditional (no `if Defaults[...]` guards).
+- `MusicManager.avgColor` is the single source of truth for the album-derived color.
+- The spectrum fill in `ClosedNotchContent.MusicLiveActivity` must always use
+  `Color(nsColor: musicManager.avgColor).gradient` — never `.gray`, `.white`, or any
+  hardcoded color.
+- Song title and artist name text in the closed notch must also use
+  `Color(nsColor: musicManager.avgColor)` — not `.gray`.
+- The `coloredSpectrogram` setting key exists in `Constants.swift` but is **dead code** —
+  it must NOT be checked anywhere in the rendering path. Do not re-introduce conditionals
+  around spectrum coloring.
+- If you modify `ClosedNotchContent`, `MusicLiveActivity`, or `MusicManager`, verify that
+  `avgColor` is still unconditionally computed and used.
+
+#### Music Waveform Animation
+
+The `AudioSpectrum` in `MusicVisualizer.swift` uses random-scale `CABasicAnimation` with
+`autoreverses` for a simple, pleasing bouncing effect:
+
+- 4 bars, each animated independently via `Timer` at 0.3s interval.
+- Each tick picks a random target scale in `0.35...1.0` and animates with `CABasicAnimation`.
+- `autoreverses = true` creates a natural bounce-back effect.
+- Frame rate capped at 24 fps via `preferredFrameRateRange`.
+- When paused, all animations are removed and bars reset to 0.35 scale.
+- **Do not replace this animation** with sine waves, display links, or audio capture —
+  the current approach is the intended design.
+
 ## Checklist for New Features
 
 1. Create the manager (if needed) in `managers/` following the singleton pattern.

@@ -5540,6 +5540,7 @@
       }
     },
     "Colored spectrogram" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
