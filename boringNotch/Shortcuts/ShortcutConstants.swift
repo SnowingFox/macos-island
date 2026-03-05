@@ -15,5 +15,7 @@ extension KeyboardShortcuts.Name {
     static let increaseBacklight = Self("increaseBacklight", default: .init(.f2, modifiers: [.command]))
     static let toggleSneakPeek = Self("toggleSneakPeek", default: .init(.h, modifiers: [.command, .shift]))
     static let toggleNotchOpen = Self("toggleNotchOpen", default: .init(.i, modifiers: [.command, .shift]))
-    static let translateSelection = Self("translateSelection", default: .init(.t, modifiers: [.function]))
+    static let translateSelection = Self("translateSelection", default: .init(.y, modifiers: [.function]))
+    static let openTodoList = Self("openTodoList", default: .init(.t, modifiers: [.function]))
+    static let openInspiration = Self("openInspiration", default: .init(.i, modifiers: [.function]))
 }

@@ -447,6 +447,72 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        KeyboardShortcuts.onKeyDown(for: .openTodoList) { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                var viewModel = self.vm
+                var targetWindow: NSWindow? = self.window
+
+                if Defaults[.showOnAllDisplays] {
+                    let mouseLocation = NSEvent.mouseLocation
+                    for (_, otherVM) in self.viewModels {
+                        if otherVM.notchState == .open { otherVM.close() }
+                    }
+                    for screen in NSScreen.screens {
+                        if screen.frame.contains(mouseLocation),
+                           let uuid = screen.displayUUID,
+                           let screenVM = self.viewModels[uuid] {
+                            viewModel = screenVM
+                            targetWindow = self.windows[uuid]
+                            break
+                        }
+                    }
+                }
+
+                self.coordinator.currentView = .todoList
+                viewModel.notchSize = settingsNotchSize
+                if viewModel.notchState == .closed {
+                    viewModel.open()
+                }
+
+                targetWindow?.makeKey()
+            }
+        }
+
+        KeyboardShortcuts.onKeyDown(for: .openInspiration) { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                var viewModel = self.vm
+                var targetWindow: NSWindow? = self.window
+
+                if Defaults[.showOnAllDisplays] {
+                    let mouseLocation = NSEvent.mouseLocation
+                    for (_, otherVM) in self.viewModels {
+                        if otherVM.notchState == .open { otherVM.close() }
+                    }
+                    for screen in NSScreen.screens {
+                        if screen.frame.contains(mouseLocation),
+                           let uuid = screen.displayUUID,
+                           let screenVM = self.viewModels[uuid] {
+                            viewModel = screenVM
+                            targetWindow = self.windows[uuid]
+                            break
+                        }
+                    }
+                }
+
+                self.coordinator.currentView = .inspiration
+                viewModel.notchSize = settingsNotchSize
+                if viewModel.notchState == .closed {
+                    viewModel.open()
+                }
+
+                targetWindow?.makeKey()
+            }
+        }
+
         if Defaults[.enableMarketTicker] {
             MarketManager.shared.startMonitoring()
         }

@@ -25,6 +25,10 @@
 		AA0000010000000EAABB000E /* ClosedNotchContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000EAABB00EE /* ClosedNotchContent.swift */; };
 		AA0000010000000FAABB000F /* BluetoothExpandedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000010000000FAABB00FF /* BluetoothExpandedView.swift */; };
 		AADCD0012EA1B0000001D003 /* DynaClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCD0022EA1B0000001D004 /* DynaClipView.swift */; };
+		AATD00012EB1000000010001 /* TodoListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AATD00022EB1000000010002 /* TodoListManager.swift */; };
+		AAIN00012EB1000000020001 /* InspirationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIN00022EB1000000020002 /* InspirationManager.swift */; };
+		AATD00032EB1000000010003 /* TodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AATD00042EB1000000010004 /* TodoListView.swift */; };
+		AAIN00032EB1000000020003 /* InspirationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIN00042EB1000000020004 /* InspirationView.swift */; };
 
 		1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */; };
 		110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */; };
@@ -220,6 +224,10 @@
 		AA0000010000000EAABB00EE /* ClosedNotchContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedNotchContent.swift; sourceTree = "<group>"; };
 		AA0000010000000FAABB00FF /* BluetoothExpandedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothExpandedView.swift; sourceTree = "<group>"; };
 		AADCD0022EA1B0000001D004 /* DynaClipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynaClipView.swift; sourceTree = "<group>"; };
+		AATD00022EB1000000010002 /* TodoListManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListManager.swift; sourceTree = "<group>"; };
+		AAIN00022EB1000000020002 /* InspirationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationManager.swift; sourceTree = "<group>"; };
+		AATD00042EB1000000010004 /* TodoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoListView.swift; sourceTree = "<group>"; };
+		AAIN00042EB1000000020004 /* InspirationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationView.swift; sourceTree = "<group>"; };
 
 		1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSItemProvider+LoadHelpers.swift"; sourceTree = "<group>"; };
 		110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryFileStorageService.swift; sourceTree = "<group>"; };
@@ -568,6 +576,8 @@
 				AA00000100000007AABB0077 /* TranslationManager.swift */,
 				AA00000100000009AABB0099 /* MarketManager.swift */,
 				AA0000010000000BAABB00BB /* PomodoroManager.swift */,
+				AATD00022EB1000000010002 /* TodoListManager.swift */,
+				AAIN00022EB1000000020002 /* InspirationManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -773,7 +783,8 @@
 				AA0000010000000EAABB00EE /* ClosedNotchContent.swift */,
 				AA0000010000000FAABB00FF /* BluetoothExpandedView.swift */,
 				AADCD0022EA1B0000001D004 /* DynaClipView.swift */,
-
+				AATD00042EB1000000010004 /* TodoListView.swift */,
+				AAIN00042EB1000000020004 /* InspirationView.swift */,
 			);
 			path = Notch;
 			sourceTree = "<group>";
@@ -987,6 +998,10 @@
 				AA0000010000000EAABB000E /* ClosedNotchContent.swift in Sources */,
 				AA0000010000000FAABB000F /* BluetoothExpandedView.swift in Sources */,
 				AADCD0012EA1B0000001D003 /* DynaClipView.swift in Sources */,
+				AATD00012EB1000000010001 /* TodoListManager.swift in Sources */,
+				AAIN00012EB1000000020001 /* InspirationManager.swift in Sources */,
+				AATD00032EB1000000010003 /* TodoListView.swift in Sources */,
+				AAIN00032EB1000000020003 /* InspirationView.swift in Sources */,
 
 				115C12EC2ED3D003009754CA /* OpenNotchHUD.swift in Sources */,
 				14C08BB92C8DE4B1000F8AA0 /* BoringCalendar.swift in Sources */,

@@ -15,6 +15,8 @@ enum WidgetPage: Hashable {
     case pomodoro
     case translation
     case music
+    case todoList
+    case inspiration
 }
 
 struct WidgetHubView: View {
@@ -38,6 +40,10 @@ struct WidgetHubView: View {
                 WidgetDetailTranslation(page: $page)
             case .music:
                 WidgetDetailMusic(page: $page)
+            case .todoList:
+                WidgetDetailTodoList(page: $page)
+            case .inspiration:
+                WidgetDetailInspiration(page: $page)
             }
         }
         .transition(
@@ -81,6 +87,18 @@ struct WidgetHubView: View {
                             title: "Translation",
                             subtitle: "Translate text between languages"
                         ) { navigateTo(.translation) }
+
+                        widgetRow(
+                            icon: "checklist",
+                            title: "Todo List",
+                            subtitle: "Quick task tracking"
+                        ) { navigateTo(.todoList) }
+
+                        widgetRow(
+                            icon: "lightbulb.fill",
+                            title: "Inspiration",
+                            subtitle: "Record & copy ideas"
+                        ) { navigateTo(.inspiration) }
                     }
 
                     widgetSection("Built-in") {
@@ -538,7 +556,7 @@ private struct WidgetDetailTranslation: View {
                             }
                         }
                         detailSection {
-                            detailHint("Shortcut: Fn + T translates selected text. Or type text above and press Return / tap the arrow.")
+                            detailHint("Shortcut: Fn + Y translates selected text. Or type text above and press Return / tap the arrow.")
                         }
                     }
                 }
@@ -582,6 +600,114 @@ private struct WidgetDetailMusic: View {
                         detailToggle(title: "Song Peek", subtitle: "Brief notification on track change", isOn: $enableSneakPeek)
                         detailToggle(title: "Lyrics", subtitle: "Show synced lyrics", isOn: $enableLyrics)
                         detailToggle(title: "Visualizer", subtitle: "Audio spectrum animation", isOn: $useMusicVisualizer)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
+        }
+    }
+}
+
+// MARK: - Detail: Todo List
+
+private struct WidgetDetailTodoList: View {
+    @Binding var page: WidgetPage
+    @Default(.useLiquidGlass) var useLiquidGlass
+    @ObservedObject var todoManager = TodoListManager.shared
+
+    var body: some View {
+        VStack(spacing: 0) {
+            WidgetDetailHeader(title: "Todo List", page: $page)
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 12) {
+                    detailSection {
+                        detailDescription(
+                            "A quick task list for capturing and tracking todos. Items persist across app launches. Check off completed tasks or clear them all at once."
+                        )
+                    }
+                    detailSection {
+                        detailHint("Shortcut: Fn + T opens the Todo List directly.")
+                    }
+                    detailSection {
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                BoringViewCoordinator.shared.currentView = .todoList
+                            }
+                        } label: {
+                            HStack {
+                                Text("Open Todo List")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .adaptiveText(isGlass: useLiquidGlass)
+                                Spacer()
+                                if !todoManager.items.isEmpty {
+                                    Text("\(todoManager.items.filter { !$0.isDone }.count) pending")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.65) : .gray)
+                                }
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
+        }
+    }
+}
+
+// MARK: - Detail: Inspiration
+
+private struct WidgetDetailInspiration: View {
+    @Binding var page: WidgetPage
+    @Default(.useLiquidGlass) var useLiquidGlass
+    @ObservedObject var inspirationManager = InspirationManager.shared
+
+    var body: some View {
+        VStack(spacing: 0) {
+            WidgetDetailHeader(title: "Inspiration", page: $page)
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 12) {
+                    detailSection {
+                        detailDescription(
+                            "A chat-style notebook for capturing ideas and inspiration on the fly. Copy individual items or all at once. Perfect for quick thoughts you don't want to forget."
+                        )
+                    }
+                    detailSection {
+                        detailHint("Shortcut: Fn + I opens Inspiration directly.")
+                    }
+                    detailSection {
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                BoringViewCoordinator.shared.currentView = .inspiration
+                            }
+                        } label: {
+                            HStack {
+                                Text("Open Inspiration")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .adaptiveText(isGlass: useLiquidGlass)
+                                Spacer()
+                                if !inspirationManager.items.isEmpty {
+                                    Text("\(inspirationManager.items.count) ideas")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.65) : .gray)
+                                }
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 12)

@@ -223,7 +223,7 @@ struct ContentView: View {
                     .onChange(of: coordinator.currentView) { _, newView in
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             if vm.notchState == .open {
-                                let needsTall = (newView == .settings || newView == .translation || newView == .market || newView == .widgets || newView == .clip)
+                                let needsTall = (newView == .settings || newView == .translation || newView == .market || newView == .widgets || newView == .clip || newView == .todoList || newView == .inspiration)
                                 vm.notchSize = needsTall ? settingsNotchSize : openNotchSize
                             }
                         }
@@ -422,6 +422,10 @@ struct ContentView: View {
                         MarketTickerView()
                     case .widgets:
                         WidgetHubView()
+                    case .todoList:
+                        TodoListView()
+                    case .inspiration:
+                        InspirationView()
                     }
                 }
                 .transition(
@@ -536,7 +540,7 @@ struct ContentView: View {
     }
 
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
-        let scrollLocked: Set<NotchViews> = [.settings, .translation, .market, .widgets, .clip]
+        let scrollLocked: Set<NotchViews> = [.settings, .translation, .market, .widgets, .clip, .todoList, .inspiration]
         guard vm.notchState == .open && !vm.isHoveringCalendar
               && !scrollLocked.contains(coordinator.currentView) else { return }
 

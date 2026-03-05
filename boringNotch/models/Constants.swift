@@ -186,6 +186,12 @@ extension Defaults.Keys {
     // Option key modifier behaviour for media keys
     static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
     
+    // MARK: Todo List
+    static let todoItems = Key<[TodoItem]>("todoItems", default: [])
+
+    // MARK: Inspiration
+    static let inspirationItems = Key<[InspirationItem]>("inspirationItems", default: [])
+
     // MARK: DynaClip (Mini Finder)
     static let pinnedClipFolders = Key<[String]>("pinnedClipFolders", default: ["~/Desktop"])
 

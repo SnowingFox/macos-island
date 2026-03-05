@@ -32,6 +32,8 @@ public enum NotchViews {
     case translation
     case market
     case widgets
+    case todoList
+    case inspiration
 }
 
 enum SettingsEnum {

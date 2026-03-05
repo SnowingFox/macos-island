@@ -1820,6 +1820,9 @@
         }
       }
     },
+    "Add a task..." : {
+
+    },
     "Add manually" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -5039,6 +5042,9 @@
         }
       }
     },
+    "Clear done" : {
+
+    },
     "Clear slot" : {
       "localizations" : {
         "ar" : {
@@ -5842,6 +5848,9 @@
           }
         }
       }
+    },
+    "Copy all" : {
+
     },
     "Copy items on drag" : {
       "localizations" : {
@@ -11664,6 +11673,9 @@
         }
       }
     },
+    "Inspiration" : {
+
+    },
     "Installed extensions" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -15085,6 +15097,9 @@
     "No results" : {
 
     },
+    "No tasks yet — type above to add one" : {
+
+    },
     "Not Now" : {
       "localizations" : {
         "ar" : {
@@ -16996,6 +17011,9 @@
           }
         }
       }
+    },
+    "Record your inspirations here" : {
+
     },
     "Release name" : {
       "localizations" : {
@@ -21510,6 +21528,9 @@
     "Today" : {
 
     },
+    "Todo" : {
+
+    },
     "Toggle Notch Open:" : {
       "localizations" : {
         "ar" : {
@@ -23131,6 +23152,9 @@
           }
         }
       }
+    },
+    "What's on your mind..." : {
+
     },
     "Widgets" : {
 

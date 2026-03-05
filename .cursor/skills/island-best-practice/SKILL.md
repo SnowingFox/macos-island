@@ -112,7 +112,9 @@ ContentView (body)
     │       ├── .settings   → NotchSettingsView
     │       ├── .widgets    → WidgetHubView     # Widget management (market, calendar, pomodoro, music)
     │       ├── .market     → MarketTickerView  # Crypto/stock/gold prices
-    │       └── .translation → TranslationView
+    │       ├── .translation → TranslationView
+    │       ├── .todoList   → TodoListView      # Quick todo list (fn+T)
+    │       └── .inspiration → InspirationView  # Inspiration recorder (fn+I)
     └── Chin rectangle (click target below notch)
 ```
 
@@ -408,6 +410,64 @@ initial commit and MUST NOT be modified. It uses `Timer` + `CABasicAnimation` wi
 - Do NOT change the timer interval, scale range, duration, or autoreverses behavior.
 - Do NOT add smooth interpolation or easing beyond what `autoreverses` provides.
 - This is the intended design — simple, lightweight, and correct.
+
+### Keyboard Shortcuts
+
+Global shortcuts are defined in `ShortcutConstants.swift` using `KeyboardShortcuts.Name`:
+
+| Shortcut | Action |
+|----------|--------|
+| Fn + Y | Translate selected text |
+| Fn + T | Open Todo List |
+| Fn + I | Open Inspiration |
+
+Shortcut handlers live in `boringNotchApp.swift` and follow a standard pattern: find the
+correct `BoringViewModel` for the current screen, set `coordinator.currentView`, adjust
+`vm.notchSize`, and call `vm.open()`.
+
+### Views with Text Input — canBecomeKey
+
+The notch window (`BoringNotchSkyLightWindow`) is an `NSPanel` that defaults to non-key
+status. Views that require keyboard input (text fields) must be listed in the
+`canBecomeKey` override:
+
+```swift
+override var canBecomeKey: Bool {
+    let view = BoringViewCoordinator.shared.currentView
+    return view == .translation || view == .todoList || view == .inspiration
+}
+```
+
+When adding a new view with text input:
+1. Add the view's `NotchViews` case to the `canBecomeKey` check above.
+2. Do NOT use `@FocusState` — the window's `makeKey()` call handles focus.
+3. Follow the `TranslationView` pattern for text field implementation.
+
+### Todo List Widget
+
+- **Manager**: `TodoListManager` (`managers/TodoListManager.swift`) — singleton, persists
+  items via `Defaults[.todoItems]`.
+- **Model**: `TodoItem` struct (Codable, Identifiable, Defaults.Serializable) with `id`,
+  `text`, `isDone`, `createdAt`.
+- **View**: `TodoListView` (`components/Notch/TodoListView.swift`) — header with back
+  button and clear-done action, input bar with `TextField`, scrollable list of checkable
+  items with delete buttons.
+- **Shortcut**: Fn + T (defined as `.openTodoList` in `ShortcutConstants.swift`).
+- **WidgetHub**: Listed under "Productivity" in `WidgetHubView` with detail page
+  `WidgetDetailTodoList`.
+
+### Inspiration Widget
+
+- **Manager**: `InspirationManager` (`managers/InspirationManager.swift`) — singleton,
+  persists items via `Defaults[.inspirationItems]`.
+- **Model**: `InspirationItem` struct (Codable, Identifiable, Defaults.Serializable) with
+  `id`, `text`, `createdAt`.
+- **View**: `InspirationView` (`components/Notch/InspirationView.swift`) — chat-style UI
+  with header (back, copy all, trash), scrollable message bubbles with timestamps and
+  per-item copy/delete, input bar at bottom. Auto-scrolls to newest entry.
+- **Shortcut**: Fn + I (defined as `.openInspiration` in `ShortcutConstants.swift`).
+- **WidgetHub**: Listed under "Productivity" in `WidgetHubView` with detail page
+  `WidgetDetailInspiration`.
 
 ## Checklist for New Features
 
