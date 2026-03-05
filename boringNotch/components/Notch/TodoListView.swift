@@ -12,7 +12,7 @@ struct TodoListView: View {
     @Default(.useLiquidGlass) var useLiquidGlass
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             header
             inputBar
                 .padding(.horizontal, 12)
@@ -25,6 +25,8 @@ struct TodoListView: View {
             )
         )
     }
+
+    // MARK: - Header
 
     private var header: some View {
         HStack {
@@ -47,27 +49,40 @@ struct TodoListView: View {
 
             Spacer()
 
-            Text("Todo")
-                .font(.system(size: 13, weight: .semibold))
-                .adaptiveText(isGlass: useLiquidGlass)
+            if let selected = todoManager.selectedDate {
+                Button {
+                    withAnimation(.smooth) { todoManager.selectDate(nil) }
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(shortDateLabel(selected))
+                            .font(.system(size: 11, weight: .medium))
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.7) : .gray)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.white.opacity(useLiquidGlass ? 0.12 : 0.06)))
+                }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                Text("Todo")
+                    .font(.system(size: 13, weight: .semibold))
+                    .adaptiveText(isGlass: useLiquidGlass)
+            }
 
             Spacer()
 
             if todoManager.items.contains(where: \.isCompleted) {
                 Button {
-                    withAnimation(.smooth) {
-                        todoManager.clearCompleted()
-                    }
+                    withAnimation(.smooth) { todoManager.clearCompleted() }
                 } label: {
                     Text("Clear done")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(useLiquidGlass ? .white.opacity(0.6) : .gray)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(Color.white.opacity(useLiquidGlass ? 0.12 : 0.06))
-                        )
+                        .background(Capsule().fill(Color.white.opacity(useLiquidGlass ? 0.12 : 0.06)))
                 }
                 .buttonStyle(PlainButtonStyle())
             } else {
@@ -77,6 +92,8 @@ struct TodoListView: View {
         .padding(.horizontal, 12)
         .padding(.top, 4)
     }
+
+    // MARK: - Input
 
     private var inputBar: some View {
         HStack(spacing: 6) {
@@ -90,15 +107,11 @@ struct TodoListView: View {
                         .fill(useLiquidGlass ? Color.white.opacity(0.1) : Color.white.opacity(0.06))
                 )
                 .onSubmit {
-                    withAnimation(.smooth) {
-                        todoManager.addItem()
-                    }
+                    withAnimation(.smooth) { todoManager.addItem() }
                 }
 
             Button {
-                withAnimation(.smooth) {
-                    todoManager.addItem()
-                }
+                withAnimation(.smooth) { todoManager.addItem() }
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
@@ -109,14 +122,23 @@ struct TodoListView: View {
         }
     }
 
+    // MARK: - List
+
     private var todoList: some View {
         ScrollView(.vertical, showsIndicators: true) {
-            if todoManager.items.isEmpty {
+            let sections = todoManager.dateSections
+            if sections.isEmpty {
                 emptyState
             } else {
-                LazyVStack(spacing: 2) {
-                    ForEach(todoManager.items) { item in
-                        todoRow(item)
+                LazyVStack(spacing: 4, pinnedViews: [.sectionHeaders]) {
+                    ForEach(sections) { section in
+                        Section {
+                            ForEach(section.items) { item in
+                                todoRow(item, isOverdueSection: section.isOverdue)
+                            }
+                        } header: {
+                            sectionHeader(section)
+                        }
                     }
                 }
                 .padding(.horizontal, 12)
@@ -124,6 +146,46 @@ struct TodoListView: View {
             }
         }
     }
+
+    // MARK: - Section Header
+
+    private func sectionHeader(_ section: TodoDateSection) -> some View {
+        HStack(spacing: 6) {
+            if section.isOverdue {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.orange)
+            }
+
+            Text(section.title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(section.isOverdue ? .orange : (useLiquidGlass ? .white.opacity(0.55) : Color(white: 0.5)))
+
+            if !section.isOverdue && section.id != Date.distantPast {
+                Text("\(section.items.filter { !$0.isCompleted }.count)")
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                    .foregroundStyle(useLiquidGlass ? .white.opacity(0.4) : Color(white: 0.45))
+            }
+
+            Spacer()
+
+            if !section.isOverdue && section.id != Date.distantPast && todoManager.selectedDate == nil {
+                Button {
+                    withAnimation(.smooth) { todoManager.selectDate(section.id) }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .font(.system(size: 10))
+                        .foregroundStyle(useLiquidGlass ? .white.opacity(0.35) : .gray.opacity(0.5))
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 4)
+        .background(Color.black.opacity(0.01))
+    }
+
+    // MARK: - Empty & Row
 
     private var emptyState: some View {
         VStack(spacing: 6) {
@@ -140,32 +202,40 @@ struct TodoListView: View {
         .padding(.vertical, 20)
     }
 
-    private func todoRow(_ item: TodoItem) -> some View {
+    private func todoRow(_ item: TodoItem, isOverdueSection: Bool) -> some View {
         HStack(spacing: 8) {
             Button {
-                withAnimation(.smooth) {
-                    todoManager.toggleItem(item)
-                }
+                withAnimation(.smooth) { todoManager.toggleItem(item) }
             } label: {
                 Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 14))
-                    .foregroundStyle(item.isCompleted ? .cyan : (useLiquidGlass ? .white.opacity(0.5) : .gray))
+                    .foregroundStyle(
+                        item.isCompleted
+                            ? .cyan
+                            : (isOverdueSection ? .orange.opacity(0.7) : (useLiquidGlass ? .white.opacity(0.5) : .gray))
+                    )
             }
             .buttonStyle(PlainButtonStyle())
 
-            Text(item.text)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(item.isCompleted ? .white.opacity(0.35) : .white)
-                .strikethrough(item.isCompleted, color: .white.opacity(0.3))
-                .lineLimit(2)
-                .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.text)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(item.isCompleted ? .white.opacity(0.35) : .white)
+                    .strikethrough(item.isCompleted, color: .white.opacity(0.3))
+                    .lineLimit(2)
+                    .conditionalModifier(useLiquidGlass) { $0.shadow(color: .black.opacity(0.2), radius: 0.5, y: 0.5) }
+
+                if isOverdueSection {
+                    Text(shortDateLabel(item.dueDate))
+                        .font(.system(size: 9))
+                        .foregroundStyle(.orange.opacity(0.6))
+                }
+            }
 
             Spacer()
 
             Button {
-                withAnimation(.smooth) {
-                    todoManager.deleteItem(item)
-                }
+                withAnimation(.smooth) { todoManager.deleteItem(item) }
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 9, weight: .semibold))
@@ -177,7 +247,21 @@ struct TodoListView: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.white.opacity(item.isCompleted ? 0.02 : (useLiquidGlass ? 0.08 : 0.04)))
+                .fill(Color.white.opacity(
+                    item.isCompleted ? 0.02 :
+                    (isOverdueSection ? 0.06 : (useLiquidGlass ? 0.08 : 0.04))
+                ))
         )
+    }
+
+    // MARK: - Helpers
+
+    private func shortDateLabel(_ date: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date) { return "Today" }
+        if cal.isDateInYesterday(date) { return "Yesterday" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter.string(from: date)
     }
 }
