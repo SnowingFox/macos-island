@@ -448,7 +448,7 @@ When adding a new view with text input:
 - **Manager**: `TodoListManager` (`managers/TodoListManager.swift`) — singleton, persists
   items via `Defaults[.todoItems]`.
 - **Model**: `TodoItem` struct (Codable, Identifiable, Defaults.Serializable) with `id`,
-  `text`, `isDone`, `createdAt`.
+  `text`, `isCompleted`, `createdAt`.
 - **View**: `TodoListView` (`components/Notch/TodoListView.swift`) — header with back
   button and clear-done action, input bar with `TextField`, scrollable list of checkable
   items with delete buttons.

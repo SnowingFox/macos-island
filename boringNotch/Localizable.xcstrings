@@ -914,6 +914,12 @@
     "%lld done" : {
 
     },
+    "%lld ideas" : {
+
+    },
+    "%lld pending" : {
+
+    },
     "%lld%%" : {
       "localizations" : {
         "ar" : {
@@ -15706,6 +15712,9 @@
     "Open full settings" : {
 
     },
+    "Open Inspiration" : {
+
+    },
     "Open Market View" : {
 
     },
@@ -16108,6 +16117,9 @@
           }
         }
       }
+    },
+    "Open Todo List" : {
+
     },
     "Option key behaviour" : {
       "localizations" : {

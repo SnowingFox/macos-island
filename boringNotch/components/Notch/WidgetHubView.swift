@@ -641,7 +641,7 @@ private struct WidgetDetailTodoList: View {
                                     .adaptiveText(isGlass: useLiquidGlass)
                                 Spacer()
                                 if !todoManager.items.isEmpty {
-                                    Text("\(todoManager.items.filter { !$0.isDone }.count) pending")
+                                    Text("\(todoManager.items.filter { !$0.isCompleted }.count) pending")
                                         .font(.system(size: 10))
                                         .foregroundStyle(useLiquidGlass ? .white.opacity(0.65) : .gray)
                                 }
