@@ -61,15 +61,16 @@ struct NotchShape: Shape {
             )
         )
 
-        path.addQuadCurve(
-            to: CGPoint(
+        path.addArc(
+            tangent1End: CGPoint(
+                x: rect.minX + topCornerRadius,
+                y: rect.maxY
+            ),
+            tangent2End: CGPoint(
                 x: rect.minX + topCornerRadius + bottomCornerRadius,
                 y: rect.maxY
             ),
-            control: CGPoint(
-                x: rect.minX + topCornerRadius,
-                y: rect.maxY
-            )
+            radius: bottomCornerRadius
         )
 
         path.addLine(
@@ -79,15 +80,16 @@ struct NotchShape: Shape {
             )
         )
 
-        path.addQuadCurve(
-            to: CGPoint(
+        path.addArc(
+            tangent1End: CGPoint(
+                x: rect.maxX - topCornerRadius,
+                y: rect.maxY
+            ),
+            tangent2End: CGPoint(
                 x: rect.maxX - topCornerRadius,
                 y: rect.maxY - bottomCornerRadius
             ),
-            control: CGPoint(
-                x: rect.maxX - topCornerRadius,
-                y: rect.maxY
-            )
+            radius: bottomCornerRadius
         )
 
         path.addLine(

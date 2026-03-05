@@ -139,6 +139,20 @@ struct ContentView: View {
                         }
                     }
                     .clipShape(currentNotchShape)
+                    .padding(
+                        .bottom,
+                        vm.effectiveClosedNotchHeight == 0 ? 10 : 0
+                    )
+                
+                mainLayout
+                    .frame(
+                        height: vm.notchState == .open
+                            ? vm.notchSize.height
+                            : (vm.effectiveClosedNotchHeight > 0
+                                ? vm.effectiveClosedNotchHeight
+                                : nil)
+                    )
+                    .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
                         Rectangle()
                             .fill(.black)
@@ -151,13 +165,6 @@ struct ContentView: View {
                         color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
                             ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
                     )
-                    .padding(
-                        .bottom,
-                        vm.effectiveClosedNotchHeight == 0 ? 10 : 0
-                    )
-                
-                mainLayout
-                    .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
                     .conditionalModifier(true) { view in
                         let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
