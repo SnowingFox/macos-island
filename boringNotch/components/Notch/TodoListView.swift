@@ -135,9 +135,12 @@ struct TodoListView: View {
                         Section {
                             ForEach(section.items) { item in
                                 todoRow(item, isOverdueSection: section.isOverdue)
+                                    .id("\(item.id.uuidString)_\(item.isCompleted)")
+                                    .transition(.opacity)
                             }
                         } header: {
                             sectionHeader(section)
+                                .id("header_\(section.id.hashValue)_\(section.items.filter(\.isCompleted).count)")
                         }
                     }
                 }
@@ -182,7 +185,11 @@ struct TodoListView: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 4)
-        .background(Color.black.opacity(0.01))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            Rectangle()
+                .fill(useLiquidGlass ? Color.black.opacity(0.75) : Color.black)
+        )
     }
 
     // MARK: - Empty & Row
