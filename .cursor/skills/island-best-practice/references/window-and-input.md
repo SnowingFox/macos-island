@@ -42,7 +42,29 @@ Global shortcuts are defined in `ShortcutConstants.swift` using `KeyboardShortcu
 | Fn + Y | Translate selected text |
 | Fn + T | Open Todo List |
 | Fn + I | Open Inspiration |
+| Fn + D | Toggle voice input (dictation) |
 
 Shortcut handlers live in `boringNotchApp.swift` and follow a standard pattern: find the
 correct `BoringViewModel` for the current screen, set `coordinator.currentView`, adjust
 `vm.notchSize`, and call `vm.open()`.
+
+**Exception: Voice Input (Fn+D)** — Unlike other shortcuts, this does NOT open the notch.
+It toggles `SpeechManager.shared.toggleRecording()` directly. The closed notch shows a
+`SpeechRecordingIndicator` while recording is active. When recording stops, the
+transcribed text is pasted into the previously-focused app via `CGEvent` Cmd+V simulation.
+
+## Voice Input Feature
+
+- **Manager**: `SpeechManager` (`managers/SpeechManager.swift`) — singleton using
+  `SFSpeechRecognizer` + `AVAudioEngine` for real-time speech-to-text.
+- **Language**: Automatically detected by the system `SFSpeechRecognizer` (no locale needed).
+- **Closed Notch UI**: `SpeechRecordingIndicator` (`components/Notch/SpeechRecordingIndicator.swift`)
+  — shows a pulsing red dot, mic icon, audio level bars, and duration timer. Follows the
+  same left-gap-right pattern as `MusicLiveActivity`.
+- **Priority**: Recording indicator appears before music live activity in the closed notch
+  content chain, so it takes visual priority while recording.
+- **Text Output**: On stop, the final transcription is copied to `NSPasteboard` and pasted
+  via `CGEvent` (Cmd+V) into whatever app had focus before recording started. The notch
+  window never becomes key during recording.
+- **Permissions**: `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`
+  are declared in `Info.plist`.

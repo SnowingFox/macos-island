@@ -513,6 +513,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        KeyboardShortcuts.onKeyDown(for: .startVoiceInput) {
+            Task { @MainActor in
+                SpeechManager.shared.toggleRecording()
+            }
+        }
+
         if Defaults[.enableMarketTicker] {
             MarketManager.shared.startMonitoring()
         }

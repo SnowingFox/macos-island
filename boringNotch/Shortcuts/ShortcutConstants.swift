@@ -18,4 +18,5 @@ extension KeyboardShortcuts.Name {
     static let translateSelection = Self("translateSelection", default: .init(.y, modifiers: [.function]))
     static let openTodoList = Self("openTodoList", default: .init(.t, modifiers: [.function]))
     static let openInspiration = Self("openInspiration", default: .init(.i, modifiers: [.function]))
+    static let startVoiceInput = Self("startVoiceInput", default: .init(.d, modifiers: [.function]))
 }

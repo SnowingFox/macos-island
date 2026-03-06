@@ -36,6 +36,7 @@ struct ContentView: View {
 
     @Default(.showNotHumanFace) var showNotHumanFace
     @Default(.useLiquidGlass) var useLiquidGlass
+    @ObservedObject private var speechManager = SpeechManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -83,6 +84,8 @@ struct ContentView: View {
             && vm.notchState == .closed && Defaults[.enableBluetoothNotifications]
         {
             chinWidth = 400
+        } else if speechManager.isRecording && vm.notchState == .closed {
+            chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 4) + 30)
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
             && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle)
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
@@ -353,6 +356,9 @@ struct ContentView: View {
                       } else if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .notification) && vm.notchState == .closed {
                           InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(.opacity)
+                      } else if speechManager.isRecording && vm.notchState == .closed {
+                          SpeechRecordingIndicator()
+                              .transition(.opacity.combined(with: .scale(scale: 0.95)))
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity(albumArtNamespace: albumArtNamespace, gestureProgress: gestureProgress)
                               .frame(alignment: .center)
