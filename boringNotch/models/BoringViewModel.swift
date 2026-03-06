@@ -10,8 +10,8 @@ import Defaults
 import SwiftUI
 
 class BoringViewModel: NSObject, ObservableObject {
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
-    @ObservedObject var detector = FullscreenMediaDetector.shared
+    private let coordinator = BoringViewCoordinator.shared
+    private let detector = FullscreenMediaDetector.shared
 
     let animationLibrary: BoringAnimations = .init()
     let animation: Animation?
@@ -105,8 +105,8 @@ class BoringViewModel: NSObject, ObservableObject {
     // Computed property for effective notch height
     var effectiveClosedNotchHeight: CGFloat {
         let currentScreen = screenUUID.flatMap { NSScreen.screen(withUUID: $0) }
-        let noNotchAndFullscreen = hideOnClosed && (currentScreen?.safeAreaInsets.top ?? 0 <= 0 || currentScreen == nil)
-        return noNotchAndFullscreen ? 0 : closedNotchSize.height
+        let hasNoNotch = (currentScreen?.safeAreaInsets.top ?? 0) <= 0
+        return (hideOnClosed && hasNoNotch) ? 0 : closedNotchSize.height
     }
 
     var chinHeight: CGFloat {

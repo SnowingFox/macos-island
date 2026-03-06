@@ -53,6 +53,8 @@ class PomodoroManager: ObservableObject {
         }
     }
 
+    private var stateBeforePause: PomodoroState = .idle
+
     private init() {}
 
     func startWork() {
@@ -73,9 +75,10 @@ class PomodoroManager: ObservableObject {
 
     func togglePause() {
         if state == .paused {
-            state = .working
+            state = stateBeforePause
             startTimer()
         } else if state == .working || state == .onBreak {
+            stateBeforePause = state
             state = .paused
             timer?.invalidate()
             timer = nil
