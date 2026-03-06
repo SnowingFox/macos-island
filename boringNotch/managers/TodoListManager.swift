@@ -131,6 +131,13 @@ class TodoListManager: ObservableObject {
         selectedDate = date
     }
 
+    private static let sectionDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd EEEE"
+        formatter.locale = Locale.current
+        return formatter
+    }()
+
     private func sectionTitle(for date: Date) -> String {
         let cal = Calendar.current
         if cal.isDateInToday(date) {
@@ -140,10 +147,7 @@ class TodoListManager: ObservableObject {
         } else if cal.isDateInTomorrow(date) {
             return "Tomorrow"
         } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MM/dd EEEE"
-            formatter.locale = Locale.current
-            return formatter.string(from: date)
+            return Self.sectionDateFormatter.string(from: date)
         }
     }
 }

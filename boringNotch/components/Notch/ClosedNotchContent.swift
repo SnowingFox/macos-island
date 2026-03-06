@@ -5,6 +5,7 @@
 //  Extracted closed-state notch content views.
 //
 
+import Combine
 import Defaults
 import SwiftUI
 
@@ -32,7 +33,7 @@ struct ClosedNotchWidgetBar: View {
     @ObservedObject private var pomodoroManager = PomodoroManager.shared
     @ObservedObject private var marketManager = MarketManager.shared
     @State private var marketDisplayIndex: Int = 0
-    @State private var cycleTimer: Timer?
+    private let cyclePublisher = Timer.publish(every: 10, on: .main, in: .common)
 
     private var loadedAssets: [MarketAsset] {
         marketManager.assets.filter(\.isLoaded)
@@ -54,12 +55,15 @@ struct ClosedNotchWidgetBar: View {
                 .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
         } else if widgetCount == 1 {
             singleWidgetFlankingLayout(showPom: showPom, showMkt: showMkt)
-                .onAppear { if showMkt { startCycling() } }
-                .onDisappear { stopCycling() }
+                .onReceive(cyclePublisher.autoconnect()) { _ in
+                    guard showMkt else { return }
+                    cycleTicker()
+                }
         } else {
             twoWidgetFlankingLayout
-                .onAppear { startCycling() }
-                .onDisappear { stopCycling() }
+                .onReceive(cyclePublisher.autoconnect()) { _ in
+                    cycleTicker()
+                }
         }
     }
 
@@ -167,24 +171,12 @@ struct ClosedNotchWidgetBar: View {
         .transition(.opacity.animation(.smooth(duration: 0.5)))
     }
 
-    private func startCycling() {
-        stopCycling()
+    private func cycleTicker() {
         let count = loadedAssets.count
         guard count > 1 else { return }
-        cycleTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
-            Task { @MainActor in
-                let c = loadedAssets.count
-                guard c > 0 else { return }
-                withAnimation(.smooth(duration: 0.6)) {
-                    marketDisplayIndex = (marketDisplayIndex + 1) % c
-                }
-            }
+        withAnimation(.smooth(duration: 0.6)) {
+            marketDisplayIndex = (marketDisplayIndex + 1) % count
         }
-    }
-
-    private func stopCycling() {
-        cycleTimer?.invalidate()
-        cycleTimer = nil
     }
 }
 
