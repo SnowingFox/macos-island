@@ -225,7 +225,7 @@ class MusicManager: ObservableObject {
                     }
                 }
             } else if (titleChanged || artistChanged || albumChanged) && !artworkChanged {
-                self.isLoadingArtwork = true
+                self.isLoadingArtwork = false
                 self.calculateAverageColor()
             }
 
