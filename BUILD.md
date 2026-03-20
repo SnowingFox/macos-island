@@ -282,13 +282,15 @@ To publish an update:
 
 ## 8. CI/CD (GitHub Actions)
 
-The project includes three workflow files:
+Workflow files under `.github/workflows/`:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
+| `cicd.yml` | Push / PR (all branches) | Release **build** of scheme `boringNotch` (macOS) |
 | `manual_build.yml` | Manual dispatch | Build + DMG artifact (no publish) |
 | `release.yml` | `/release` comment on PR | Full pipeline: build → notarize → GitHub Release → Homebrew |
-| `cicd.yml` | Push / PR | CI checks |
+| `static.yml` | Push to `main` / manual | Deploy static content to **GitHub Pages** |
+| `update-version-dropdown.yml` | Tags / release / manual | Refresh version dropdown in issue form from latest tags |
 
 ### Required GitHub Secrets
 

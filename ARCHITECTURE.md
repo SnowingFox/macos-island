@@ -47,7 +47,7 @@ flowchart TB
     COO --> DEF
 ```
 
-- **视图层**：`ContentView` 为根；内部 `NotchLayout` 按 `notchState`（开/合）与 `coordinator.currentView` 路由到 Home、Shelf、Settings、Widgets 等。
+- **视图层**：`ContentView` 为根；内部 `NotchLayout` 按 `notchState`（开/合）与 `coordinator.currentView` 路由到 Home、Shelf、DynaClip（`DynaClipView`，迷你文件浏览）、Settings、Widgets、Todo、Inspiration 等（完整映射见 §5）。
 - **状态层**：见下一节「三层状态」。
 - **系统层**：`AppDelegate` 创建/定位窗口、多屏生命周期、拖拽检测、锁屏与 SkyLight 等；与 `NotchSpaceManager`、私有 API 封装等配合。
 
@@ -117,7 +117,7 @@ ContentView
 |--------------|------|
 | `.home` | `NotchHomeView` |
 | `.shelf` | `ShelfView` |
-| `.clip` | `DynaClipView`（剪贴/片段类能力） |
+| `.clip` | `DynaClipView` — 刘海内 **迷你文件浏览**（置顶文件夹标签、目录导航；`DynaClipManager`） |
 | `.settings` | `NotchSettingsView` |
 | `.translation` | `TranslationView` |
 | `.market` | `MarketTickerView` |
@@ -227,7 +227,7 @@ ContentView
 |------|------|
 | [README.md](./README.md) | 产品功能、安装与使用；内含架构导读与本文链接 |
 | [BUILD.md](./BUILD.md) | **构建与发布**：`xcodebuild`、签名与公证、DMG、Sparkle、GitHub Actions 工作流与密钥、**Island / boringNotch 命名对照** |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程；**代码 PR 以 `dev` 为基分支**，**仅文档改动可对 `main` 开 PR** |
 | [SECURITY.md](./SECURITY.md) | 安全披露 |
 | `.cursor/skills/island-best-practice/SKILL.md` | 目录结构、状态分层、新功能 Checklist |
 | `.cursor/skills/island-best-practice/references/*.md` | 设计、动画、音乐、小组件、窗口与输入、Xcode 工程 |
@@ -243,8 +243,15 @@ ContentView
 
 ### 14.2 CI（GitHub Actions）
 
-- **`.github/workflows/cicd.yml`**：在 **push** 与 **pull_request**（全分支）上触发，使用 [mxcl/xcodebuild](https://github.com/mxcl/xcodebuild) 对 Scheme **`boringNotch`** 执行 **Release** `build`。
-- 其它工作流（如手动构建、带 `/release` 的发布流水线）说明见 **BUILD.md §8**。
+| 工作流 | 触发 | 作用 |
+|--------|------|------|
+| **`cicd.yml`** | push / PR（全分支） | **Release** `build`（[mxcl/xcodebuild](https://github.com/mxcl/xcodebuild)，Scheme `boringNotch`） |
+| **`manual_build.yml`** | 手动 | 构建并产出 **DMG** 工件（不发布） |
+| **`release.yml`** | PR 评论 `/release x.y.z` 等 | 构建、公证、GitHub Release、Homebrew、Sparkle 等完整发布链（见 BUILD.md） |
+| **`static.yml`** | push 到 **`main`** / 手动 | 将仓库静态内容部署到 **GitHub Pages** |
+| **`update-version-dropdown.yml`** | tag / release / 手动 | 同步 Issue 表单里的**版本下拉选项**（最近 tag） |
+
+- 更细的密钥、变量与发布步骤见 **BUILD.md §8**。
 - 当前工程 **未** 配置独立 XCTest 目标；若后续加入单元测试，建议在本文与 README「Building」中补充 `xcodebuild test` 约定。
 
 ### 14.3 与产品名的关系
