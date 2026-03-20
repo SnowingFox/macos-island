@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "a21f3e08c946",
+  "session_id": "07e3ff4a-f155-49b0-ae62-7f8f248695cf",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-20T14:28:34.229937Z",
+  "branch": "feat/entire-testing",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".codex/skills/island-best-practice/SKILL.md",
+    ".cursor/skills/island-best-practice/SKILL.md",
+    "ARCHITECTURE.md",
+    "README.md"
+  ],
+  "agent": "Cursor",
+  "model": "composer-2-fast",
+  "turn_id": "134e84de0cf5",
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-20T14:28:34.205281Z",
+    "agent_lines": 32,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 32,
+    "agent_percentage": 100
+  }
+}

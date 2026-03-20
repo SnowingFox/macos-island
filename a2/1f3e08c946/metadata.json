@@ -1,0 +1,21 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "a21f3e08c946",
+  "strategy": "manual-commit",
+  "branch": "feat/entire-testing",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".codex/skills/island-best-practice/SKILL.md",
+    ".cursor/skills/island-best-practice/SKILL.md",
+    "ARCHITECTURE.md",
+    "README.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a2/1f3e08c946/0/metadata.json",
+      "transcript": "/a2/1f3e08c946/0/full.jsonl",
+      "content_hash": "/a2/1f3e08c946/0/content_hash.txt",
+      "prompt": "/a2/1f3e08c946/0/prompt.txt"
+    }
+  ]
+}
