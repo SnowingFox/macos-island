@@ -83,6 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         MusicManager.shared.destroy()
         cleanupDragDetectors()
         cleanupWindows()
+        FunctionKeyInterceptor.shared.stop()
         XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
     }
 
@@ -513,10 +514,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        KeyboardShortcuts.onKeyDown(for: .startVoiceInput) {
-            Task { @MainActor in
-                SpeechManager.shared.toggleRecording()
-            }
+        Task { @MainActor in
+            await FunctionKeyInterceptor.shared.start(promptIfNeeded: true)
         }
 
         if Defaults[.enableMarketTicker] {

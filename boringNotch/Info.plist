@@ -7,7 +7,7 @@
 	<key>NSLocationUsageDescription</key>
 	<string>Your location is used to display local weather information in the notch widget.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone access is needed for the voice-to-text input feature (Fn+D).</string>
+	<string>Microphone access is needed for the voice-to-text input feature (press and hold Fn).</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Speech recognition is used to convert your voice into text for direct input.</string>
 	<key>NSAppTransportSecurity</key>

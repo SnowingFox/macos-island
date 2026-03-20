@@ -11,6 +11,7 @@ import Defaults
 import AVFoundation
 
 private let kSystemDefinedEventType = CGEventType(rawValue: 14)!
+private let functionKeyActivationDelay: TimeInterval = 0.12
 
 final class MediaKeyInterceptor {
     static let shared = MediaKeyInterceptor()
@@ -272,5 +273,148 @@ final class MediaKeyInterceptor {
         
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
+    }
+}
+
+final class FunctionKeyInterceptor {
+    static let shared = FunctionKeyInterceptor()
+
+    private var eventTap: CFMachPort?
+    private var runLoopSource: CFRunLoopSource?
+    private var isFunctionKeyDown = false
+    private var functionKeySuppressed = false
+    private var startWorkItem: DispatchWorkItem?
+
+    private init() {}
+
+    @MainActor
+    func start(promptIfNeeded: Bool = false) async {
+        guard eventTap == nil else { return }
+
+        let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+        if !authorized {
+            if promptIfNeeded {
+                let granted = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
+                guard granted else { return }
+            } else {
+                return
+            }
+        }
+
+        let mask = CGEventMask(
+            (1 << CGEventType.flagsChanged.rawValue) |
+            (1 << CGEventType.keyDown.rawValue)
+        )
+        eventTap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .listenOnly,
+            eventsOfInterest: mask,
+            callback: { _, type, cgEvent, userInfo in
+                guard let userInfo else { return Unmanaged.passRetained(cgEvent) }
+                let interceptor = Unmanaged<FunctionKeyInterceptor>.fromOpaque(userInfo)
+                    .takeUnretainedValue()
+                return interceptor.handleEvent(type: type, cgEvent: cgEvent)
+            },
+            userInfo: UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        )
+
+        if let eventTap {
+            runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+            if let runLoopSource {
+                CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+            }
+            CGEvent.tapEnable(tap: eventTap, enable: true)
+        }
+    }
+
+    func stop() {
+        if let eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+        }
+        if let runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        }
+        runLoopSource = nil
+        eventTap = nil
+    }
+
+    private func handleEvent(type: CGEventType, cgEvent: CGEvent) -> Unmanaged<CGEvent>? {
+        guard cgEvent.type != .null else { return Unmanaged.passRetained(cgEvent) }
+        guard let event = NSEvent(cgEvent: cgEvent) else {
+            return Unmanaged.passRetained(cgEvent)
+        }
+
+        switch type {
+        case .flagsChanged:
+            handleFlagsChanged(event)
+        case .keyDown:
+            handleKeyDown(event)
+        default:
+            break
+        }
+
+        return Unmanaged.passRetained(cgEvent)
+    }
+
+    private func handleFlagsChanged(_ event: NSEvent) {
+        let fnPressed = event.modifierFlags.contains(.function)
+        if fnPressed && !isFunctionKeyDown {
+            isFunctionKeyDown = true
+            functionKeySuppressed = !isFunctionOnly(event.modifierFlags)
+            scheduleStartIfNeeded()
+        } else if !fnPressed && isFunctionKeyDown {
+            isFunctionKeyDown = false
+            cancelPendingStart()
+            Task { @MainActor in
+                SpeechManager.shared.endFunctionHold()
+            }
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) {
+        if event.keyCode == 53 {
+            Task { @MainActor in
+                SpeechManager.shared.cancelCurrentSession()
+            }
+            return
+        }
+
+        guard isFunctionKeyDown else { return }
+        guard event.modifierFlags.contains(.function) else { return }
+        functionKeySuppressed = true
+        cancelPendingStart()
+        Task { @MainActor in
+            SpeechManager.shared.cancelCurrentSession()
+        }
+    }
+
+    private func scheduleStartIfNeeded() {
+        cancelPendingStart()
+        guard !functionKeySuppressed else { return }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard self.isFunctionKeyDown, !self.functionKeySuppressed else { return }
+            Task { @MainActor in
+                SpeechManager.shared.beginFunctionHold()
+            }
+        }
+        startWorkItem = workItem
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + functionKeyActivationDelay,
+            execute: workItem
+        )
+    }
+
+    private func cancelPendingStart() {
+        startWorkItem?.cancel()
+        startWorkItem = nil
+    }
+
+    private func isFunctionOnly(_ flags: NSEvent.ModifierFlags) -> Bool {
+        let relevant: NSEvent.ModifierFlags = [.command, .shift, .option, .control, .capsLock, .function]
+        let filtered = flags.intersection(relevant)
+        return filtered == [.function]
     }
 }

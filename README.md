@@ -71,7 +71,21 @@
 
 ### 🌐 Translation
 - Instant translation for selected text
-- Keyboard shortcut activation
+- Keyboard shortcut activation (**Fn + Y**)
+
+### 🎙️ Voice input (dictation)
+- **Hold the Fn key** (alone, after a short delay) to start — you don’t need to open the notch first
+- **Release Fn** to paste the transcript into the app that had focus
+- **Esc** cancels the current session; pressing another key while holding **Fn** cancels dictation so shortcuts like **Fn + T** / **Fn + I** still work
+- Live transcription in the closed notch (and expanded UI when needed), with permission / on-device asset flows handled in-app
+
+### ✅ Todo List
+- Quick capture of tasks with due dates and grouped-by-day list
+- **Fn + T** to open from anywhere
+
+### 💡 Inspiration
+- Chat-style scratchpad for ideas; copy one or all entries
+- **Fn + I** to open from anywhere
 
 ### 🎨 Liquid Glass
 - Optional translucent glass background
@@ -123,6 +137,19 @@ brew install --cask TheBoredTeam/boring-notch/boring-notch --no-quarantine
 - **Drop files** near the notch to open Shelf
 - Use the **menu bar star** to access settings
 
+### Keyboard shortcuts (global)
+
+| Shortcut | Action |
+|----------|--------|
+| **Hold Fn** | Start voice dictation (release to paste, Esc to cancel) |
+| **Fn + Y** | Translate selected text |
+| **Fn + T** | Open Todo List |
+| **Fn + I** | Open Inspiration |
+
+Some shortcuts can be remapped in Island’s **Settings → Keyboard**; others use the defaults above.
+
+> **Voice input:** Requires **Microphone** and **Speech Recognition** (and related dictation assets where applicable). Hold-to-dictate uses an accessibility event tap — grant **Accessibility** to Island (and the XPC helper if prompted) in **System Settings → Privacy & Security** if Fn hold doesn’t start.
+
 ---
 
 ## Roadmap
@@ -138,6 +165,8 @@ brew install --cask TheBoredTeam/boring-notch/boring-notch --no-quarantine
 - [x] Market ticker
 - [x] Translation
 - [x] Liquid glass mode
+- [x] Voice input (hold Fn) with closed-notch / expanded speech UI
+- [x] Todo List & Inspiration widgets (Fn + T / Fn + I)
 - [ ] Bluetooth live activity
 - [ ] Extension system
 - [ ] Lock screen widgets
@@ -157,6 +186,12 @@ cd boring.notch
 open boringNotch.xcodeproj
 # Then press Cmd+R to build and run
 ```
+
+---
+
+## Architecture
+
+Contributor-oriented technical overview (state layers, windowing, managers, how to extend features): **[ARCHITECTURE.md](./ARCHITECTURE.md)**（中文）.
 
 ---
 

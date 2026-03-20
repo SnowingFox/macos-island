@@ -10,7 +10,6 @@ import SwiftUI
 
 extension KeyboardShortcuts.Name {
     static let clipboardHistoryPanel = Self("clipboardHistoryPanel", default: .init(.c, modifiers: [.shift, .command]))
-    static let toggleMicrophone = Self("toggleMicrophone", default: .init(.f5, modifiers: [.function]))
     static let decreaseBacklight = Self("decreaseBacklight", default: .init(.f1, modifiers: [.command]))
     static let increaseBacklight = Self("increaseBacklight", default: .init(.f2, modifiers: [.command]))
     static let toggleSneakPeek = Self("toggleSneakPeek", default: .init(.h, modifiers: [.command, .shift]))
@@ -18,5 +17,4 @@ extension KeyboardShortcuts.Name {
     static let translateSelection = Self("translateSelection", default: .init(.y, modifiers: [.function]))
     static let openTodoList = Self("openTodoList", default: .init(.t, modifiers: [.function]))
     static let openInspiration = Self("openInspiration", default: .init(.i, modifiers: [.function]))
-    static let startVoiceInput = Self("startVoiceInput", default: .init(.d, modifiers: [.function]))
 }

@@ -69,8 +69,17 @@ struct ContentView: View {
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
         let widgetCount = closedWidgetCount
+        let maxWidth = windowSize.width - 20
 
-        if notificationManager.showNotification && vm.notchState == .closed && Defaults[.enableNotifications] {
+        if vm.notchState == .closed,
+           let speechWidth = speechManager.preferredClosedWidth(
+            baseWidth: chinWidth,
+            closedHeight: vm.effectiveClosedNotchHeight,
+            maxWidth: maxWidth
+           )
+        {
+            chinWidth = speechWidth
+        } else if notificationManager.showNotification && vm.notchState == .closed && Defaults[.enableNotifications] {
             chinWidth = 480
         } else if coordinator.expandingView.type == .battery && coordinator.expandingView.show
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
@@ -84,8 +93,6 @@ struct ContentView: View {
             && vm.notchState == .closed && Defaults[.enableBluetoothNotifications]
         {
             chinWidth = 400
-        } else if speechManager.isRecording && vm.notchState == .closed {
-            chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 4) + 30)
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
             && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle)
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
@@ -103,7 +110,6 @@ struct ContentView: View {
             chinWidth += (2 * sideWidth + 20)
         }
 
-        let maxWidth = windowSize.width - 20
         return min(chinWidth, maxWidth)
     }
 
@@ -215,6 +221,15 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .onChange(of: speechManager.phase) { _, newPhase in
+                        guard newPhase != .idle else { return }
+                        if vm.notchState == .open {
+                            vm.close()
+                        }
+                        withAnimation(animationSpring) {
+                            isHovering = false
+                        }
+                    }
                     .onChange(of: vm.isBatteryPopoverActive) {
                         if !vm.isBatteryPopoverActive && !isHovering && vm.notchState == .open && !SharingStateManager.shared.preventNotchClose {
                             hoverTask?.cancel()
@@ -271,6 +286,10 @@ struct ContentView: View {
         .onChange(of: vm.anyDropZoneTargeting) { _, isTargeted in
             anyDropDebounceTask?.cancel()
 
+            if speechManager.blocksNotchInteractions {
+                return
+            }
+
             if isTargeted {
                 if vm.notchState == .closed {
                     coordinator.currentView = .shelf
@@ -310,6 +329,9 @@ struct ContentView: View {
                     )
                     .padding(.top, 40)
                     Spacer()
+                } else if speechManager.isPresentingSpeechUI && vm.notchState == .closed {
+                    SpeechRecordingIndicator()
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     if notificationManager.showNotification && vm.notchState == .closed && Defaults[.enableNotifications] {
                         NotificationClosedView()
@@ -356,9 +378,6 @@ struct ContentView: View {
                       } else if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .notification) && vm.notchState == .closed {
                           InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                               .transition(.opacity)
-                      } else if speechManager.isRecording && vm.notchState == .closed {
-                          SpeechRecordingIndicator()
-                              .transition(.opacity.combined(with: .scale(scale: 0.95)))
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity(albumArtNamespace: albumArtNamespace, gestureProgress: gestureProgress)
                               .frame(alignment: .center)
@@ -375,7 +394,7 @@ struct ContentView: View {
                            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
                        }
 
-                      if coordinator.sneakPeek.show {
+                      if coordinator.sneakPeek.show && !speechManager.isPresentingSpeechUI {
                           if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && (coordinator.sneakPeek.type != .notification) && !Defaults[.inlineHUD] && vm.notchState == .closed {
                               SystemEventIndicatorModifier(
                                   eventType: $coordinator.sneakPeek.type,
@@ -470,6 +489,7 @@ struct ContentView: View {
     }
 
     private func doOpen() {
+        guard !speechManager.blocksNotchInteractions else { return }
         withAnimation(animationSpring) {
             vm.open()
         }
@@ -480,6 +500,15 @@ struct ContentView: View {
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
+
+        guard !speechManager.blocksNotchInteractions else {
+            if !hovering {
+                withAnimation(animationSpring) {
+                    isHovering = false
+                }
+            }
+            return
+        }
         
         if hovering {
             withAnimation(animationSpring) {
@@ -529,6 +558,7 @@ struct ContentView: View {
     // MARK: - Gesture Handling
 
     private func handleDownGesture(translation: CGFloat, phase: NSEvent.Phase) {
+        guard !speechManager.blocksNotchInteractions else { return }
         guard vm.notchState == .closed else { return }
 
         if phase == .ended {
@@ -552,6 +582,7 @@ struct ContentView: View {
     }
 
     private func handleUpGesture(translation: CGFloat, phase: NSEvent.Phase) {
+        guard !speechManager.blocksNotchInteractions else { return }
         let scrollLocked: Set<NotchViews> = [.settings, .translation, .market, .widgets, .clip, .todoList, .inspiration]
         guard vm.notchState == .open && !vm.isHoveringCalendar
               && !scrollLocked.contains(coordinator.currentView) else { return }
