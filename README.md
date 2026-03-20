@@ -197,6 +197,10 @@ Island 的代码组织遵循 **三层状态**：每块屏幕一个 **`BoringView
 
 **[ARCHITECTURE.md](./ARCHITECTURE.md)**（中文，贡献者向）
 
+命令行构建、代码签名、公证、DMG、CI 工作流，以及 **Island 显示名与 `boringNotch` 工程命名** 的对照见：
+
+**[BUILD.md](./BUILD.md)**
+
 ---
 
 ## Contributing
@@ -232,7 +236,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - **Icon:** [@maxtron95](https://github.com/maxtron95)
 - **Website:** [@himanshhhhuv](https://github.com/himanshhhhuv)
 
-See [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md) for full license details.
+See [THIRD_PARTY_LICENSES](./THIRD_PARTY_LICENSES) for full license details.
 
 ---
 

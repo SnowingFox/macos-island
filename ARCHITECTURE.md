@@ -4,7 +4,7 @@
 
 与实现细节相关的模块约定（动画、小组件、音乐、Liquid Glass 等）见 **`.cursor/skills/island-best-practice/references/`**；**以仓库源码为准**，本文随主分支更新。
 
-**目录**：[1](#1-项目定位与运行时约束) · [2](#2-架构总览) · [3](#3-三层状态管理) · [4](#4-应用入口与窗口模型) · [5](#5-视图组合逻辑结构) · [6](#6-managers单例服务) · [7](#7-observers-与其它横切能力) · [8](#8-扩展新功能时的推荐顺序) · [9](#9-尺寸与布局常量) · [10](#10-ui-与设计约定liquid-glass) · [11](#11-手势与动画) · [12](#12-全局快捷键与语音) · [13](#13-相关文档)
+**目录**：[1](#1-项目定位与运行时约束) · [2](#2-架构总览) · [3](#3-三层状态管理) · [4](#4-应用入口与窗口模型) · [5](#5-视图组合逻辑结构) · [6](#6-managers单例服务) · [7](#7-observers-与其它横切能力) · [8](#8-扩展新功能时的推荐顺序) · [9](#9-尺寸与布局常量) · [10](#10-ui-与设计约定liquid-glass) · [11](#11-手势与动画) · [12](#12-全局快捷键与语音) · [13](#13-相关文档) · [14](#14-构建cicd-与仓库命名约定)
 
 ---
 
@@ -140,7 +140,7 @@ ContentView
 | 媒体 | `MusicManager` |
 | 语音 | `SpeechManager` |
 | 日历/天气 | `CalendarManager`、`WeatherManager` |
-| 系统 HUD | `VolumeManager`、`BrightnessManager`、`BatteryActivityManager` |
+| 系统 HUD | `VolumeManager`、`BrightnessManager`、`BatteryActivityManager`（底层事件）；UI 侧电量条等通过 **`BatteryStatusViewModel`**（`models/BatteryStatusViewModel.swift`）聚合展示 |
 | 业务功能 | `TranslationManager`、`MarketManager`、`PomodoroManager`、`WebcamManager` |
 | 列表/剪贴 | `TodoListManager`、`InspirationManager`、`DynaClipManager` |
 | 通知 / 蓝牙 | `UserNotificationManager`、`BluetoothManager`（闭合态扩展条等） |
@@ -226,10 +226,31 @@ ContentView
 | 文档 | 说明 |
 |------|------|
 | [README.md](./README.md) | 产品功能、安装与使用；内含架构导读与本文链接 |
+| [BUILD.md](./BUILD.md) | **构建与发布**：`xcodebuild`、签名与公证、DMG、Sparkle、GitHub Actions 工作流与密钥、**Island / boringNotch 命名对照** |
 | [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程 |
 | [SECURITY.md](./SECURITY.md) | 安全披露 |
 | `.cursor/skills/island-best-practice/SKILL.md` | 目录结构、状态分层、新功能 Checklist |
 | `.cursor/skills/island-best-practice/references/*.md` | 设计、动画、音乐、小组件、窗口与输入、Xcode 工程 |
+
+---
+
+## 14. 构建、CI/CD 与仓库命名约定
+
+### 14.1 本地与发布构建
+
+- 日常调试：在 Xcode 中打开 **`boringNotch.xcodeproj`**，Scheme **`boringNotch`**，目标 **My Mac**。
+- 命令行、签名、公证、导出 DMG、Sparkle appcast、以及 **display name「island」与内部 `boringNotch` 模块/Bundle ID 为何并存** — 见 **[BUILD.md](./BUILD.md)**。
+
+### 14.2 CI（GitHub Actions）
+
+- **`.github/workflows/cicd.yml`**：在 **push** 与 **pull_request**（全分支）上触发，使用 [mxcl/xcodebuild](https://github.com/mxcl/xcodebuild) 对 Scheme **`boringNotch`** 执行 **Release** `build`。
+- 其它工作流（如手动构建、带 `/release` 的发布流水线）说明见 **BUILD.md §8**。
+- 当前工程 **未** 配置独立 XCTest 目标；若后续加入单元测试，建议在本文与 README「Building」中补充 `xcodebuild test` 约定。
+
+### 14.3 与产品名的关系
+
+- 仓库与 README 常用 **Island** 指产品；`@main` 入口类型为 **`DynamicNotchApp`**（定义于 `boringNotch/boringNotchApp.swift`）。
+- Xcode 工程目录名、target、`.app` 包名、Swift 模块仍以 **`boringNotch`** 为主 — 详见 **BUILD.md §10**。
 
 ---
 
