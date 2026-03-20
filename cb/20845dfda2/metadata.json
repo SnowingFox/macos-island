@@ -1,0 +1,18 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "cb20845dfda2",
+  "strategy": "manual-commit",
+  "branch": "feat/entire-testing",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "ARCHITECTURE.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cb/20845dfda2/0/metadata.json",
+      "transcript": "/cb/20845dfda2/0/full.jsonl",
+      "content_hash": "/cb/20845dfda2/0/content_hash.txt",
+      "prompt": "/cb/20845dfda2/0/prompt.txt"
+    }
+  ]
+}

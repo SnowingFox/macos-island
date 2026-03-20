@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.5.0",
+  "checkpoint_id": "cb20845dfda2",
+  "session_id": "b5ba8f62-2cd6-4886-8c94-1147c9f4f4fb",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-20T14:21:36.656081Z",
+  "branch": "feat/entire-testing",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "ARCHITECTURE.md"
+  ],
+  "agent": "Cursor",
+  "model": "composer-2",
+  "turn_id": "60722feb59b4",
+  "checkpoint_transcript_start": 19,
+  "transcript_lines_at_start": 19,
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-20T14:21:36.625611Z",
+    "agent_lines": 55,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 55,
+    "agent_percentage": 100
+  }
+}
