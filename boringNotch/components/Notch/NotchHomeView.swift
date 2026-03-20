@@ -84,7 +84,7 @@ struct AlbumArtView: View {
     private var albumArtDarkOverlay: some View {
         Rectangle()
             .aspectRatio(1, contentMode: .fit)
-            .foregroundColor(Color.black)
+            .foregroundStyle(Color.black)
             .opacity(musicManager.isPlaying ? 0 : 0.8)
             .blur(radius: 50)
     }
@@ -279,7 +279,7 @@ struct MusicControlsView: View {
     private func slotView(for slot: MusicControlButton) -> some View {
         switch slot {
         case .shuffle:
-            HoverButton(icon: "shuffle", iconColor: musicManager.isShuffled ? .red : .primary, scale: .medium) {
+            HoverButton(icon: "shuffle", iconColor: musicManager.isShuffled ? .red : .white, scale: .medium) {
                 MusicManager.shared.toggleShuffle()
             }
         case .previous:
@@ -329,7 +329,7 @@ struct MusicControlsView: View {
     private var repeatIconColor: Color {
         switch musicManager.repeatMode {
         case .off:
-            return .primary
+            return .white
         case .all, .one:
             return .red
         }
@@ -352,7 +352,7 @@ struct FavoriteControlButton: View {
     }
 
     private var iconColor: Color {
-        musicManager.isFavoriteTrack ? .red : .primary
+        musicManager.isFavoriteTrack ? .red : .white
     }
 }
 
@@ -384,7 +384,7 @@ struct VolumeControlView: View {
             }) {
                 Image(systemName: volumeIcon)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(musicManager.volumeControlSupported ? .white : .gray)
+                    .foregroundStyle(musicManager.volumeControlSupported ? .white : .gray)
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(!musicManager.volumeControlSupported)
@@ -610,7 +610,7 @@ struct MusicSliderView: View {
                 Text(timeString(from: duration))
             }
             .fontWeight(.medium)
-            .foregroundColor(
+            .foregroundStyle(
                 Defaults[.playerColorTinting]
                     ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6) : .gray
             )

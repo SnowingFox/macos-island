@@ -6,15 +6,16 @@ option.
 
 ## Home View Layout
 
-The open notch home view (`NotchHomeView`) uses a two-row layout:
+Canonical open size is **`openNotchSize`** in `sizing/matters.swift` (currently **660×200**) — see also repo root **`ARCHITECTURE.md` §9**.
+
+`NotchHomeView` is structured for a **two-row** home layout, but as of current source the **`body` only composes `primaryRow`** (music + optional camera or calendar). A **`secondaryWidgetRow`** property exists (market / pomodoro compact widgets from `Defaults[.homeWidgets]`) but is **not yet inserted** into the view hierarchy; wiring it in would likely require revisiting `openNotchSize` height and layout spacing.
+
+Intended layout when both rows are active:
 - **Top row**: Music player (full width, with optional camera).
-- **Bottom row**: Horizontal widget row (`widgetRow`), driven by `Defaults[.homeWidgets]` — an
-  ordered array of `HomeWidget` enum values (`.calendar`, `.market`, `.pomodoro`).
-  Only enabled widgets are rendered. Each uses `.frame(maxWidth: .infinity)`. No scroll.
+- **Bottom row**: Horizontal widget row, driven by `Defaults[.homeWidgets]` — an ordered array of `HomeWidget` (`.calendar`, `.market`, `.pomodoro`). Only enabled widgets render; each uses `.frame(maxWidth: .infinity)`. No scroll.
 
 Key rules:
-- Music is always on top — never moves, never reorderable.
-- `openNotchSize` is 660×280 to accommodate both rows.
+- Music stays on top — never moves, never reorderable in the home widget order.
 - New home widgets must be added to the `HomeWidget` enum.
 - Each widget should be a compact, self-contained view with card backgrounds.
 
