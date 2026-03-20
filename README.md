@@ -187,6 +187,8 @@ open boringNotch.xcodeproj
 # Then press Cmd+R to build and run
 ```
 
+> **Contributors:** base feature/fix work on **`dev`** (`git checkout dev` before branching). Documentation-only PRs may target **`main`**. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ---
 
 ## Architecture

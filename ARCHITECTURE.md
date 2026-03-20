@@ -47,7 +47,7 @@ flowchart TB
     COO --> DEF
 ```
 
-- **视图层**：`ContentView` 为根；内部 `NotchLayout` 按 `notchState`（开/合）与 `coordinator.currentView` 路由到 Home、Shelf、Settings、Widgets 等。
+- **视图层**：`ContentView` 为根；内部 `NotchLayout` 按 `notchState`（开/合）与 `coordinator.currentView` 路由到 Home、Shelf、Clip（`DynaClipView`）、Settings、Widgets、Todo、Inspiration 等（完整映射见 §5）。
 - **状态层**：见下一节「三层状态」。
 - **系统层**：`AppDelegate` 创建/定位窗口、多屏生命周期、拖拽检测、锁屏与 SkyLight 等；与 `NotchSpaceManager`、私有 API 封装等配合。
 
@@ -227,7 +227,7 @@ ContentView
 |------|------|
 | [README.md](./README.md) | 产品功能、安装与使用；内含架构导读与本文链接 |
 | [BUILD.md](./BUILD.md) | **构建与发布**：`xcodebuild`、签名与公证、DMG、Sparkle、GitHub Actions 工作流与密钥、**Island / boringNotch 命名对照** |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献流程；**代码 PR 以 `dev` 为基分支**，**仅文档改动可对 `main` 开 PR** |
 | [SECURITY.md](./SECURITY.md) | 安全披露 |
 | `.cursor/skills/island-best-practice/SKILL.md` | 目录结构、状态分层、新功能 Checklist |
 | `.cursor/skills/island-best-practice/references/*.md` | 设计、动画、音乐、小组件、窗口与输入、Xcode 工程 |

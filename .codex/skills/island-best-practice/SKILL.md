@@ -126,6 +126,7 @@ ContentView (body)
     │   └── [open] switch currentView:
     │       ├── .home       → NotchHomeView     # Music player + calendar/weather + pomodoro
     │       ├── .shelf      → ShelfView         # File shelf
+    │       ├── .clip       → DynaClipView      # Clips / snippets
     │       ├── .settings   → NotchSettingsView
     │       ├── .widgets    → WidgetHubView     # Widget management
     │       ├── .market     → MarketTickerView  # Crypto/stock/gold prices
