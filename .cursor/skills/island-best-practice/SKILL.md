@@ -13,6 +13,8 @@ description: >
 boring.notch is a macOS app that replaces the MacBook's notch with a dynamic, interactive widget.
 It displays music playback, notifications, system HUDs, calendar/weather, a file shelf, and more.
 
+**Repository technical architecture (Chinese, contributor-oriented):** root [`ARCHITECTURE.md`](../../../ARCHITECTURE.md) — state layers, windowing, sizing, Liquid Glass summary, gestures, shortcuts/speech, and pointers into this skill’s `references/`.
+
 ## References
 
 Detailed module-specific docs live in `references/`. Consult them when working in the

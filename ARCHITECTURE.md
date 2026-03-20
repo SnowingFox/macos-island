@@ -4,6 +4,8 @@
 
 与实现细节相关的模块约定（动画、小组件、音乐、Liquid Glass 等）见 **`.cursor/skills/island-best-practice/references/`**；**以仓库源码为准**，本文随主分支更新。
 
+**目录**：[1](#1-项目定位与运行时约束) · [2](#2-架构总览) · [3](#3-三层状态管理) · [4](#4-应用入口与窗口模型) · [5](#5-视图组合逻辑结构) · [6](#6-managers单例服务) · [7](#7-observers-与其它横切能力) · [8](#8-扩展新功能时的推荐顺序) · [9](#9-尺寸与布局常量) · [10](#10-ui-与设计约定liquid-glass) · [11](#11-手势与动画) · [12](#12-全局快捷键与语音) · [13](#13-相关文档)
+
 ---
 
 ## 1. 项目定位与运行时约束
@@ -124,6 +126,8 @@ ContentView
 | `.inspiration` | `InspirationView` |
 
 - 枚举定义见 **`enums/generic.swift`**。新增顶层页需同时：扩展 `NotchViews`、在 **`ContentView.NotchLayout`** 的 `switch` 中接入、按需调整 **`vm.notchSize`**、在 Tab / 设置中暴露入口（参见 skill 中的 **Checklist for New Features**）。
+
+**Home 页说明**：`NotchHomeView` 当前 **`body` 仅包含 `primaryRow`**（音乐 + 可选日历/摄像头）。代码里已有 **`secondaryWidgetRow`**（行情 / 番茄等紧凑小组件），但尚未挂入视图树；若未来接入，需同步评估 **`openNotchSize`** 高度与 **`references/widget-system.md`** 中的布局约定。
 
 ---
 
