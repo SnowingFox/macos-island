@@ -10,7 +10,7 @@
 
 <p align="center">
   <a title="Crowdin" target="_blank" href="https://crowdin.com/project/boring-notch"><img src="https://badges.crowdin.net/boring-notch/localized.svg"></a>
-  <img src="https://github.com/TheBoredTeam/boring.notch/actions/workflows/cicd.yml/badge.svg" alt="Build & Test" style="margin-right: 10px;" />
+  <img src="https://github.com/TheBoredTeam/boring.notch/actions/workflows/cicd.yml/badge.svg" alt="CI: macOS Release build" style="margin-right: 10px;" />
   <a href="https://discord.gg/c8JXA7qrPm">
     <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/c8JXA7qrPm?style=flat" alt="Discord" />
   </a>
@@ -52,6 +52,9 @@
 - Drag & drop files for quick access
 - One-click AirDrop sharing
 - Persistent storage across sessions
+
+### 📁 DynaClip
+- Mini **file browser** in the notch: pinned folders, grid or list, quick navigation (see in-app tab / settings)
 
 ### 🎛️ System HUDs
 - Replace macOS volume, brightness, and backlight overlays
@@ -158,6 +161,7 @@ Some shortcuts can be remapped in Island’s **Settings → Keyboard**; others u
 - [x] Calendar & reminders integration
 - [x] Weather widget with particles
 - [x] File shelf with AirDrop
+- [x] DynaClip — mini file browser in the notch (pinned folders)
 - [x] Mirror / camera preview
 - [x] Battery & charging indicator
 - [x] System HUD replacement (volume, brightness)

@@ -44,7 +44,8 @@ boringNotch/
 │   ├── Music/                    # Lyrics, visualizer, slider
 │   ├── Tabs/                     # Tab bar (home/shelf/widgets)
 │   ├── Webcam/                   # Camera preview
-│   └── Onboarding/               # First-launch flow
+│   ├── Onboarding/               # First-launch flow
+│   └── Tips/                     # TipKit tips (e.g. TipStore.swift)
 ├── managers/                     # Singleton ObservableObject managers
 ├── models/                       # BoringViewModel, Constants, data models
 ├── extensions/                   # SwiftUI View extensions, helpers
@@ -126,7 +127,7 @@ ContentView (body)
     │   └── [open] switch currentView:
     │       ├── .home       → NotchHomeView     # Music player + calendar/weather + pomodoro
     │       ├── .shelf      → ShelfView         # File shelf
-    │       ├── .clip       → DynaClipView      # Clips / snippets
+    │       ├── .clip       → DynaClipView      # Mini file browser (pinned folders; DynaClipManager)
     │       ├── .settings   → NotchSettingsView
     │       ├── .widgets    → WidgetHubView     # Widget management
     │       ├── .market     → MarketTickerView  # Crypto/stock/gold prices
