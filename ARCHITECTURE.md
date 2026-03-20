@@ -2,6 +2,8 @@
 
 本文档描述 **Island**（仓库名 `boring.notch`）的 macOS 端架构：状态分层、窗口与输入、模块边界，以及扩展功能时的推荐路径。面向需要改代码或做 Code Review 的贡献者。
 
+与实现细节相关的模块约定（动画、小组件、音乐、Liquid Glass 等）见 **`.cursor/skills/island-best-practice/references/`**；**以仓库源码为准**，本文随主分支更新。
+
 ---
 
 ## 1. 项目定位与运行时约束
@@ -59,8 +61,13 @@ flowchart TB
 
 ### 3.2 `BoringViewCoordinator`（全局单例）
 
-- **职责**：跨屏共享的「岛」级状态：当前主视图 `currentView: NotchViews`、岛是否视为打开 `notchIsOpen`、Sneak Peek / 扩展 HUD、首选屏幕 UUID、首次启动与 What’s New 等。
+- **职责**：跨屏共享的「岛」级状态，主要包括：
+  - **导航**：`currentView: NotchViews`（与 `ContentView.NotchLayout` 内 `switch` 一致）。
+  - **瞬时 HUD**：`sneakPeek`（音量/亮度/背光/麦克风/音乐/通知等短时条）、`expandingView`（如电池、pomodoro、蓝牙、下载等带自动隐藏的扩展条）。
+  - **屏幕**：`preferredScreenUUID` / `selectedScreenUUID`；历史上从「按显示器名称存储」迁移为 **UUID**（`private init()` 内迁移逻辑）。
+  - **其它**：`notchIsOpen`、`helloAnimationRunning`（首次启动动画）、`firstLaunch` / `showWhatsNew`（`@AppStorage`）、标签栏相关 `alwaysShowTabs`、`openLastTabByDefault` 等。
 - **访问**：`BoringViewCoordinator.shared`；在需要路由或全局 HUD 的视图中 `@ObservedObject`。
+- **与 ViewModel**：`BoringViewModel` 内部持有 `coordinator` 引用，用于与全局状态同步（如部分场景下的联动）。
 
 ### 3.3 `Defaults` + `@AppStorage`
 
@@ -97,14 +104,26 @@ flowchart TB
 ContentView
 └── ZStack / VStack 等
     └── NotchLayout
-        ├── [closed] 音乐 Live Activity、电池、系统 HUD、通知、人脸等
+        ├── [closed] 语音指示、通知、扩展条、Sneak Peek、音乐 Live Activity、人脸动画、ClosedNotchWidgetBar 等（按优先级分支）
         ├── [open]   BoringHeader（标签 / 操作）
-        ├── [closed] ClosedNotchWidgetBar（小组件指示）
-        └── [open]   switch coordinator.currentView
-                     → NotchHomeView / ShelfView / NotchSettingsView / …
+        └── [open]   switch coordinator.currentView → 下方主内容区
 ```
 
-- **`NotchViews`**（`enums/generic.swift`）：`home`、`shelf`、`clip`、`settings`、`translation`、`market`、`widgets`、`todoList`、`inspiration` 等，新增顶层页需同步扩展此处与 `ContentView` 的 `switch`。
+**`NotchViews` → 主视图映射**（`ContentView.swift` 内 `switch coordinator.currentView`，仅在 `vm.notchState == .open` 时展示主内容区）：
+
+| `NotchViews` | 视图 |
+|--------------|------|
+| `.home` | `NotchHomeView` |
+| `.shelf` | `ShelfView` |
+| `.clip` | `DynaClipView`（剪贴/片段类能力） |
+| `.settings` | `NotchSettingsView` |
+| `.translation` | `TranslationView` |
+| `.market` | `MarketTickerView` |
+| `.widgets` | `WidgetHubView` |
+| `.todoList` | `TodoListView` |
+| `.inspiration` | `InspirationView` |
+
+- 枚举定义见 **`enums/generic.swift`**。新增顶层页需同时：扩展 `NotchViews`、在 **`ContentView.NotchLayout`** 的 `switch` 中接入、按需调整 **`vm.notchSize`**、在 Tab / 设置中暴露入口（参见 skill 中的 **Checklist for New Features**）。
 
 ---
 
@@ -141,7 +160,7 @@ ContentView
 2. 若需后台逻辑：在 `managers/` 增加单例（或扩展现有 Manager）。
 3. 若需新「整页」：扩展 `NotchViews` + `ContentView` 路由 + 必要时调整 `notchSize`。
 4. 新 Swift 文件加入 **`boringNotch.xcodeproj/project.pbxproj`**（详见 skill **`xcode-integration.md`**）。
-5. 在 ** notch 内设置** 和/或 **独立 Settings 窗口** 中暴露开关。
+5. 在 **刘海内设置**（`NotchSettingsView`）和/或 **独立 Settings 窗口**（`SettingsView` / `SettingsWindowController`）中暴露开关。
 6. 同时验证：**Liquid Glass 开/关**、**刘海开/合**、多显示器（若相关）。
 
 更细的动画、小组件布局、音乐模块规则等见 **`.cursor/skills/island-best-practice/references/`** 下各篇（`animation-patterns.md`、`widget-system.md`、`music-module.md` 等）。

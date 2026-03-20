@@ -48,9 +48,9 @@ struct BoringHeader: View {
                                     .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "web.camera")
-                                            .foregroundColor(.white)
-                                            .padding()
+                                            .foregroundStyle(.white)
                                             .imageScale(.medium)
+                                            .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -74,9 +74,9 @@ struct BoringHeader: View {
                                     .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "gear")
-                                            .foregroundColor(.white)
-                                            .padding()
+                                            .foregroundStyle(.white)
                                             .imageScale(.medium)
+                                            .conditionalModifier(useLiquidGlass) { $0.glassIcon() }
                                     }
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -102,7 +102,7 @@ struct BoringHeader: View {
             .blur(radius: vm.notchState == .closed ? 20 : 0)
             .zIndex(2)
         }
-        .foregroundColor(.gray)
+        .foregroundStyle(.gray)
         .environmentObject(vm)
     }
 

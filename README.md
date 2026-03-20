@@ -191,7 +191,11 @@ open boringNotch.xcodeproj
 
 ## Architecture
 
-Contributor-oriented technical overview (state layers, windowing, managers, how to extend features): **[ARCHITECTURE.md](./ARCHITECTURE.md)**（中文）.
+Island 的代码组织遵循 **三层状态**：每块屏幕一个 **`BoringViewModel`**（开合、尺寸、拖放与单屏交互）、全局单例 **`BoringViewCoordinator`**（当前页 `NotchViews`、Sneak Peek / 扩展 HUD、首选显示器等），以及 **`Defaults` / `@AppStorage`** 持久化偏好。主 UI 由 **`AppDelegate`** 创建贴顶浮动窗口，**`ContentView` → `NotchLayout`** 按 `notchState` 与 `coordinator.currentView` 路由各业务页。
+
+更完整的技术说明（窗口与输入、Managers、扩展新功能的推荐顺序、references 索引）见：
+
+**[ARCHITECTURE.md](./ARCHITECTURE.md)**（中文，贡献者向）
 
 ---
 

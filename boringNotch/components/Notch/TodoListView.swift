@@ -188,7 +188,7 @@ struct TodoListView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             Rectangle()
-                .fill(useLiquidGlass ? Color.black.opacity(0.75) : Color.black)
+                .fill(useLiquidGlass ? Color.white.opacity(0.08) : Color.black)
         )
     }
 
@@ -263,12 +263,16 @@ struct TodoListView: View {
 
     // MARK: - Helpers
 
+    private static let shortDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MM/dd"
+        return f
+    }()
+
     private func shortDateLabel(_ date: Date) -> String {
         let cal = Calendar.current
         if cal.isDateInToday(date) { return "Today" }
         if cal.isDateInYesterday(date) { return "Yesterday" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: date)
+        return Self.shortDateFormatter.string(from: date)
     }
 }
